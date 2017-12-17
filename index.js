@@ -46,6 +46,7 @@ module.exports = function Model(options = {}) {
   /** Return */
   return Object.freeze({
     create,
+    connect,
     history: Object.freeze(history.slice()),
     maxGSIK,
     node,
@@ -55,6 +56,39 @@ module.exports = function Model(options = {}) {
     _documentClient: documentClient
   });
   // ---
+
+  /**
+   * Creates a connection to another node.
+   * @param {object} config - Configuration object.
+   * @property {any} endNode - Other node to connect with.
+   * @return {Promise} Results of all the performed actions.
+   */
+  function connect(config = {}) {
+    var { target, type } = config;
+    var _history = [];
+
+    if (isObject(target) && target.node) target = target.node;
+
+    if (node === undefined) throw new Error('Node is undefined');
+    if (type === undefined) throw new Error('Type is undefined');
+    if (target === undefined) throw new Error('Target is undefined');
+
+    return db
+      .createEdge({
+        tenant,
+        type,
+        node,
+        target
+      })
+      .then(result => {
+        _history.push(result);
+        return nextModel({ history: _history });
+      })
+      .catch(error => {
+        history.push(error);
+        throw error;
+      });
+  }
   /**
    * Creates a new node, and all its attached properties.
    * @param {object} config - Configuration object.

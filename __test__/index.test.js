@@ -36,16 +36,17 @@ describe('Model', () => {
     });
   });
 
-  describe('#create()', () => {
-    var documentClient = {
-      put: params => ({ promise: () => Promise.resolve(params) }),
-      batchWrite: params => ({ promise: () => Promise.resolve(params) })
-    };
-    var maxGSIK = 0;
-    var data = 'example';
-    var tenant = cuid();
-    var Test = Model({ tenant, table, type, maxGSIK, documentClient });
+  var documentClient = {
+    put: params => ({ promise: () => Promise.resolve(params) }),
+    batchWrite: params => ({ promise: () => Promise.resolve(params) }),
+    query: params => ({ promise: () => Promise.resolve(params) })
+  };
+  var maxGSIK = 0;
+  var data = 'example';
+  var tenant = cuid();
+  var Test = Model({ tenant, table, type, maxGSIK, documentClient });
 
+  describe('#create()', () => {
     test('should throw an error if data is undefined', () => {
       expect(() => Test.create()).toThrow('Data is undefined');
     });
@@ -157,6 +158,88 @@ describe('Model', () => {
           }
         ]);
       });
+    });
+  });
+
+  describe('#connect()', () => {
+    var node = cuid();
+    var type = 'Connection';
+    var nodeB = cuid();
+    var _documentClient = Object.assign({}, documentClient, {
+      query: params => ({
+        promise: () =>
+          Promise.resolve(
+            Object.assign({}, params, {
+              Items: [
+                {
+                  Node: nodeB,
+                  Target: nodeB,
+                  Data: JSON.stringify('Something'),
+                  GSIK: nodeB + '#1',
+                  Type: 'SomethingElse'
+                }
+              ]
+            })
+          )
+      })
+    });
+    var TestC = Model({
+      tenant,
+      node,
+      table,
+      type,
+      maxGSIK,
+      documentClient: _documentClient
+    });
+    var TestB = Model({
+      tenant,
+      node: nodeB,
+      table,
+      type,
+      maxGSIK,
+      documentClient
+    });
+
+    test('should throw an error if node is undefined', () => {
+      expect(() => Test.connect({ type })).toThrow('Node is undefined');
+    });
+
+    test('should throw an error if target is undefined', () => {
+      expect(() => TestC.connect({ type })).toThrow('Target is undefined');
+    });
+
+    test('should throw an error if type is undefined', () => {
+      expect(() => TestC.connect({ target: cuid() })).toThrow(
+        'Type is undefined'
+      );
+    });
+
+    test('should accept another Model to make the connection', () => {
+      expect(() =>
+        TestC.connect({
+          target: TestB
+        })
+      ).not.toThrow('End node is undefined');
+    });
+
+    test('should save the edge on the database', () => {
+      TestC.connect({
+        target: TestB,
+        type
+      })
+        .then(result => {
+          expect(result.history[0]).toEqual({
+            Item: {
+              Data: '"Something"',
+              GSIK: node + '#1',
+              Node: node,
+              Target: nodeB,
+              Type: 'Connection'
+            },
+            TableName: 'TestTable'
+          });
+        })
+        .catch(error => console.log(error));
     });
   });
 });
