@@ -62,7 +62,8 @@ describe('Model', () => {
               Node: node,
               Target: node,
               Type: type,
-              GSIK: node + '#' + 1
+              GSIK: node + '#' + 1,
+              MaxGSIK: 0
             }
           });
           expect(result.history[1]).toBe(undefined);
@@ -81,7 +82,8 @@ describe('Model', () => {
             Node: node,
             Target: node,
             Type: type,
-            GSIK: node + '#' + 1
+            GSIK: node + '#' + 1,
+            MaxGSIK: 0
           }
         });
         expect(result.history[1]).toEqual([
@@ -126,7 +128,8 @@ describe('Model', () => {
             Node: node,
             Target: node,
             Type: type,
-            GSIK: node + '#' + 1
+            GSIK: node + '#' + 1,
+            MaxGSIK: 0
           }
         });
         expect(result.history[1]).toEqual([
@@ -353,6 +356,18 @@ describe('Model', () => {
                     Type: 'EdgeType2',
                     Data: JSON.stringify('EdgeData2'),
                     Target: target2
+                  }
+                ]
+              });
+            case '#Node, #Type, #Data, #GSIK, #MaxGSIK':
+              return Promise.resolve({
+                Items: [
+                  {
+                    Node: node,
+                    Type: type,
+                    Data: JSON.stringify('Data Text'),
+                    GSIK: node + '#1',
+                    MaxGSIK: 0
                   }
                 ]
               });
