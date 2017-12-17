@@ -282,4 +282,76 @@ describe('Model', () => {
       });
     });
   });
+
+  describe('#get()', () => {
+    var node = cuid();
+    var target1 = cuid();
+    var target2 = cuid();
+    var documentClient = {
+      query: params => ({
+        promise: () => {
+          switch (params.ProjectionExpression) {
+            case '#Data':
+              return Promise.resolve({
+                Items: [{ Data: JSON.stringify('Data Text') }]
+              });
+            case '#Node, #Type, #Data':
+              return Promise.resolve({
+                Items: [
+                  {
+                    Node: node,
+                    Type: 'PropertyType1',
+                    Data: JSON.stringify('PropertyData1')
+                  },
+                  {
+                    Node: node,
+                    Type: 'PropertyType2',
+                    Data: JSON.stringify('PropertyData2')
+                  }
+                ]
+              });
+            case '#Type, #Data, #Target':
+              return Promise.resolve({
+                Items: [
+                  {
+                    Type: 'EdgeType1',
+                    Data: JSON.stringify('EdgeData1'),
+                    Target: target1
+                  },
+                  {
+                    Type: 'EdgeType2',
+                    Data: JSON.stringify('EdgeData2'),
+                    Target: target2
+                  }
+                ]
+              });
+          }
+        }
+      })
+    };
+
+    var Test = Model({ tenant, table, type, maxGSIK, documentClient });
+
+    test('should return a promise', () => {
+      expect(Test.get(node) instanceof Promise).toBe(true);
+    });
+
+    test('should query the node', () => {
+      var node = cuid();
+      return Test.get(node).then(result => {
+        expect(result.node).toEqual(node);
+        expect(result.data).toEqual('Data Text');
+        expect(result.properties).toEqual({
+          PropertyType1: 'PropertyData1',
+          PropertyType2: 'PropertyData2'
+        });
+        expect(result.edges.EdgeType1.node).toEqual(target1);
+        expect(result.edges.EdgeType1.type).toEqual('EdgeType1');
+        expect(result.edges.EdgeType1.data).toEqual('EdgeData1');
+        expect(result.edges.EdgeType2.node).toEqual(target2);
+        expect(result.edges.EdgeType2.type).toEqual('EdgeType2');
+        expect(result.edges.EdgeType2.data).toEqual('EdgeData2');
+      });
+    });
+  });
 });

@@ -15,6 +15,9 @@ var isArray = require('lodash/isArray.js');
  * @property {DocumentClientDriver} [documentClient] - DynamoDB DocumentClient
  *                                                     driver.
  * @property {object[]} history=[] - History of the model.
+ * @property {PropertyMap} properties - Map of node properties.
+ * @property {EdgesMap} edges - Map of node edges.
+ * @property {any} data - Node main data.
  * @property {string} node - Node of the current model.
  */
 module.exports = function Model(options = {}) {
@@ -25,7 +28,10 @@ module.exports = function Model(options = {}) {
     table = process.env.TABLE_NAME,
     tenant = '',
     type,
-    history = []
+    history = [],
+    properties,
+    edges,
+    data
   } = options;
 
   if (type === undefined) throw new Error('Type is undefined');
@@ -45,18 +51,68 @@ module.exports = function Model(options = {}) {
 
   /** Return */
   return Object.freeze({
+    addProperty,
     create,
     connect,
-    addProperty,
+    data,
+    edges,
+    get,
     history: Object.freeze(history.slice()),
     maxGSIK,
     node,
     promise,
+    properties,
     tenant,
     type,
     _documentClient: documentClient
   });
   // ---
+
+  function get(_node) {
+    _node || (_node = node);
+    var _history = [],
+      data,
+      properties,
+      edges;
+
+    if (_node === undefined) throw new Error('Node is undefined');
+
+    return Promise.all([
+      db.getNodeData(_node),
+      db.getNodeProperties(_node),
+      db.getNodeEdges(_node)
+    ]).then(results => {
+      var [dataResult, propertiesResult, edgesResult] = results;
+      data = dataResult.Items[0].Data;
+      properties = propertiesResult.Items.reduce(
+        (acc, item) =>
+          Object.assign(acc, {
+            [item.Type]: item.Data
+          }),
+        {}
+      );
+      edges = edgesResult.Items.reduce(
+        (acc, item) =>
+          Object.assign(acc, {
+            [item.Type]: nextModel({
+              node: item.Target,
+              type: item.Type,
+              data: item.Data,
+              history: [item]
+            })
+          }),
+        {}
+      );
+      _history = _history.concat([dataResult, propertiesResult, edgesResult]);
+      return nextModel({
+        node: _node,
+        history: _history,
+        data,
+        properties,
+        edges
+      });
+    });
+  }
   /**
    * Adds a property to a node.
    * @param {object} config - Configuration object.
@@ -184,12 +240,15 @@ module.exports = function Model(options = {}) {
   function nextModel(override) {
     var options = Object.assign(
       {
-        table,
+        edges,
+        data,
+        documentClient,
+        maxGSIK,
         node,
+        properties,
+        table,
         type,
         tenant,
-        maxGSIK,
-        documentClient,
         _history: history
       },
       override
