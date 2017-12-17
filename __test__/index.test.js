@@ -283,6 +283,37 @@ describe('Model', () => {
     });
   });
 
+  describe('#setNode()', () => {
+    var node = cuid();
+    var tenant = cuid();
+    var data = 'Data';
+    var type = 'Type';
+    var maxGSIK = 0;
+    var properties = { One: 1 };
+    var edges = {
+      Edge: Model({ tenant, node, type, table, data, maxGSIK, documentClient })
+    };
+    var Test = Model({
+      tenant,
+      node,
+      type,
+      table,
+      data,
+      maxGSIK,
+      documentClient
+    });
+
+    test('should return a Model with the new Node', () => {
+      var newNode = cuid();
+      Test.setNode(newNode);
+      expect(Test.data).toEqual(undefined);
+      expect(Test.node).toEqual(newNode);
+      expect(Test.tenant).toEqual(tenant);
+      expect(Test.properties).toEqual({});
+      expect(Test.edges).toEqual({});
+    });
+  });
+
   describe('#get()', () => {
     var node = cuid();
     var target1 = cuid();
@@ -330,15 +361,14 @@ describe('Model', () => {
       })
     };
 
-    var Test = Model({ tenant, table, type, maxGSIK, documentClient });
+    var Test = Model({ tenant, node, table, type, maxGSIK, documentClient });
 
     test('should return a promise', () => {
-      expect(Test.get(node) instanceof Promise).toBe(true);
+      expect(Test.get() instanceof Promise).toBe(true);
     });
 
     test('should query the node', () => {
-      var node = cuid();
-      return Test.get(node).then(result => {
+      return Test.get().then(result => {
         expect(result.node).toEqual(node);
         expect(result.data).toEqual('Data Text');
         expect(result.properties).toEqual({

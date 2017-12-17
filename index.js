@@ -50,37 +50,69 @@ module.exports = function Model(options = {}) {
   });
 
   /** Return */
-  return Object.freeze({
+  var publicAPI = {
     addProperty,
     create,
     connect,
-    data,
-    edges,
+    get data() {
+      return data;
+    },
+    get edges() {
+      return edges;
+    },
     get,
     history: Object.freeze(history.slice()),
-    maxGSIK,
-    node,
+    get maxGSIK() {
+      return maxGSIK;
+    },
+    get node() {
+      return node;
+    },
+    get tenant() {
+      return tenant;
+    },
+    get type() {
+      return type;
+    },
     promise,
-    properties,
-    tenant,
-    type,
+    get properties() {
+      return properties;
+    },
+    setNode,
     _documentClient: documentClient
-  });
-  // ---
+  };
 
-  function get(_node) {
-    _node || (_node = node);
+  return publicAPI;
+  // ---
+  /**
+   * Sets the new node, and returns the other values to its default.
+   * @param {string} newNode - New node ID.
+   * @param {Model} Returns a new Model with the new node.
+   */
+  function setNode(newNode) {
+    node = newNode;
+    data = undefined;
+    properties = {};
+    edges = {};
+    history.push({ setNode: newNode });
+    return publicAPI;
+  }
+  /**
+   * Gets the node data, properties, and edge information.
+   * @return {Promise} Next model with the resulting data.
+   */
+  function get() {
     var _history = [],
       data,
       properties,
       edges;
 
-    if (_node === undefined) throw new Error('Node is undefined');
+    if (node === undefined) throw new Error('Node is undefined');
 
     return Promise.all([
-      db.getNodeData(_node),
-      db.getNodeProperties(_node),
-      db.getNodeEdges(_node)
+      db.getNodeData(node),
+      db.getNodeProperties(node),
+      db.getNodeEdges(node)
     ]).then(results => {
       var [dataResult, propertiesResult, edgesResult] = results;
       data = dataResult.Items[0].Data;
@@ -105,7 +137,6 @@ module.exports = function Model(options = {}) {
       );
       _history = _history.concat([dataResult, propertiesResult, edgesResult]);
       return nextModel({
-        node: _node,
         history: _history,
         data,
         properties,
@@ -118,7 +149,7 @@ module.exports = function Model(options = {}) {
    * @param {object} config - Configuration object.
    * @property {any} data - Property data.
    * @property {string} type - Connection type.
-   * @return {Promise} Results of all the performed actions.
+   * @return {Promise} Next model with the resulting data.
    */
   function addProperty(config = {}) {
     var { type, data } = config;
@@ -140,7 +171,7 @@ module.exports = function Model(options = {}) {
    * @param {object} config - Configuration object.
    * @property {string|Model} target - Target node ID, or target node Model.
    * @property {string} type - Connection type.
-   * @return {Promise} Results of all the performed actions.
+   * @return {Promise} Next model with the resulting data.
    */
   function connect(config = {}) {
     var { target, type } = config;
@@ -176,7 +207,7 @@ module.exports = function Model(options = {}) {
    *                                                 PropertyMap to turn into a
    *                                                 Property list, and attach
    *                                                 to the node.
-   * @return {Promise} Results of all the performed actions.
+   * @return {Promise} Next model with the resulting data.
    */
   function create(config = {}) {
     var { data, properties } = config;
@@ -220,7 +251,7 @@ module.exports = function Model(options = {}) {
   }
   /**
    * Executes the actions stored on the chain.
-   * @returns {Promise} Results of all the performed actions.
+   * @returns {Promise} Next model with the resulting data.
    */
   function promise() {
     return Promise.resolve(status);
