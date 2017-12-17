@@ -284,6 +284,38 @@ describe('Model', () => {
         });
       });
     });
+
+    test('should get the maxGSIK value if it is undefined', () => {
+      var maxGSIK = 0;
+      var _documentClient = Object.assign({}, documentClient, {
+        query: params => ({
+          promise: () =>
+            Promise.resolve({
+              Items: [{ MaxGSIK: maxGSIK }]
+            })
+        })
+      });
+      var Test = Model({
+        tenant,
+        node,
+        table,
+        type,
+        documentClient: _documentClient
+      });
+
+      return Test.addProperty({ type, data }).then(result => {
+        expect(Test.maxGSIK).toEqual(maxGSIK);
+        expect(result.history[1]).toEqual({
+          TableName: table,
+          Item: {
+            Node: result.node,
+            Data: JSON.stringify(data),
+            Type: type,
+            GSIK: result.node + '#1'
+          }
+        });
+      });
+    });
   });
 
   describe('#setNode()', () => {

@@ -155,17 +155,19 @@ module.exports = function Model(options = {}) {
   function addProperty(config = {}) {
     var { type, data } = config;
     var _history = [];
+    var start = Promise.resolve();
 
     if (node === undefined) throw new Error('Node is undefined');
     if (type === undefined) throw new Error('Type is undefined');
     if (data === undefined) throw new Error('Data is undefined');
+    if (maxGSIK === undefined) start = getMaxGSIK(_history);
 
-    return db
-      .createProperty({ tenant, node, type, data, maxGSIK })
-      .then(result => {
+    return start.then(() =>
+      db.createProperty({ tenant, node, type, data, maxGSIK }).then(result => {
         _history.push(result);
         return nextModel({ history: _history });
-      });
+      })
+    );
   }
   /**
    * Creates a connection to another node.
@@ -177,28 +179,33 @@ module.exports = function Model(options = {}) {
   function connect(config = {}) {
     var { target, type } = config;
     var _history = [];
+    var start = Promise.resolve();
 
     if (isObject(target) && target.node) target = target.node;
 
     if (node === undefined) throw new Error('Node is undefined');
     if (type === undefined) throw new Error('Type is undefined');
     if (target === undefined) throw new Error('Target is undefined');
+    if (maxGSIK === undefined) start = getMaxGSIK(_history);
 
-    return db
-      .createEdge({
-        tenant,
-        type,
-        node,
-        target
-      })
-      .then(result => {
-        _history.push(result);
-        return nextModel({ history: _history });
-      })
-      .catch(error => {
-        history.push(error);
-        throw error;
-      });
+    return start.then(() =>
+      db
+        .createEdge({
+          tenant,
+          type,
+          node,
+          target,
+          maxGSIK
+        })
+        .then(result => {
+          _history.push(result);
+          return nextModel({ history: _history });
+        })
+        .catch(error => {
+          history.push(error);
+          throw error;
+        })
+    );
   }
   /**
    * Creates a new node, and all its attached properties.
@@ -212,43 +219,48 @@ module.exports = function Model(options = {}) {
    */
   function create(config = {}) {
     var { data, properties } = config;
-    var _history = [],
-      _node;
+    var _history = [];
+    var _node;
+    var start = Promise.resolve();
 
     if (node) throw new Error('Node already exists');
+    if (data === undefined) throw new Error('Data is undefined');
+    if (maxGSIK === undefined) start = getMaxGSIK(_history);
 
-    return db
-      .createNode({
-        tenant,
-        maxGSIK,
-        type,
-        data
-      })
-      .then((response = {}) => {
-        if (response.Item === undefined) throw new Error('Item is undefined');
+    return start.then(() =>
+      db
+        .createNode({
+          tenant,
+          maxGSIK,
+          type,
+          data
+        })
+        .then((response = {}) => {
+          if (response.Item === undefined) throw new Error('Item is undefined');
 
-        _node = response.Item.Node;
+          _node = response.Item.Node;
 
-        _history.push(response);
+          _history.push(response);
 
-        if (properties === undefined) return;
+          if (properties === undefined) return;
 
-        return db
-          .createProperties({
-            tenant,
-            node: _node,
-            maxGSIK,
-            properties: isArray(properties)
-              ? properties
-              : mapToProperties(properties)
-          })
-          .then(response => {
-            _history.push(response);
-          });
-      })
-      .then(() => {
-        return nextModel({ node: _node, history: _history });
-      });
+          return db
+            .createProperties({
+              tenant,
+              node: _node,
+              maxGSIK,
+              properties: isArray(properties)
+                ? properties
+                : mapToProperties(properties)
+            })
+            .then(response => {
+              _history.push(response);
+            });
+        })
+        .then(() => {
+          return nextModel({ node: _node, history: _history });
+        })
+    );
   }
   /**
    * Executes the actions stored on the chain.
@@ -256,6 +268,18 @@ module.exports = function Model(options = {}) {
    */
   function promise() {
     return Promise.resolve(status);
+  }
+  /**
+   * Gets the value of the maxGSIK from the table.
+   * @returns {Promise} Empty chain to continue the work.
+   */
+  function getMaxGSIK(history) {
+    return db.getNode(node).then(response => {
+      var item = response.Items[0];
+      maxGSIK = item.MaxGSIK;
+      if (maxGSIK === undefined) throw new Error('Max GSIK is undefined');
+      history.push(response);
+    });
   }
   /**
    * Transforms a PropertiesMap into a list of Properties.
