@@ -11,7 +11,7 @@ var isArray = require('lodash/isArray.js');
  * @param {object} options
  * @property {string} type - Node type.
  * @property {string} [tenant=''] - Tenant identifier.
- * @property {number} [maxGSIK=4] - Maximum number of GSIK.
+ * @property {number} [maxGSIK] - Maximum number of GSIK.
  * @property {DocumentClientDriver} [documentClient] - DynamoDB DocumentClient
  *                                                     driver.
  * @property {object[]} history=[] - History of the model.
@@ -23,7 +23,7 @@ var isArray = require('lodash/isArray.js');
 module.exports = function Model(options = {}) {
   var {
     documentClient,
-    maxGSIK = 4,
+    maxGSIK,
     node,
     table = process.env.TABLE_NAME,
     tenant = '',
@@ -35,7 +35,8 @@ module.exports = function Model(options = {}) {
   } = options;
 
   if (type === undefined) throw new Error('Type is undefined');
-  if (typeof maxGSIK !== 'number') throw new Error('Max GSIK is not a number');
+  if (maxGSIK !== undefined && typeof maxGSIK !== 'number')
+    throw new Error('Max GSIK is not a number');
   if (table === undefined) throw new Error('Table is undefined');
 
   if (documentClient === undefined) {
