@@ -75,11 +75,10 @@ module.exports = function Model(options = {}) {
     get type() {
       return type;
     },
-    promise,
     get properties() {
       return properties;
     },
-    setNode,
+    set,
     _documentClient: documentClient
   };
 
@@ -90,12 +89,12 @@ module.exports = function Model(options = {}) {
    * @param {string} newNode - New node ID.
    * @param {Model} Returns a new Model with the new node.
    */
-  function setNode(newNode) {
+  function set(newNode) {
     node = newNode;
     data = undefined;
     properties = {};
     edges = {};
-    history.push({ setNode: newNode });
+    history.push({ set: newNode });
     return publicAPI;
   }
   /**
@@ -258,13 +257,6 @@ module.exports = function Model(options = {}) {
       .then(() => {
         return nextModel({ node: _node, history: _history });
       });
-  }
-  /**
-   * Executes the actions stored on the chain.
-   * @returns {Promise} Next model with the resulting data.
-   */
-  function promise() {
-    return Promise.resolve(status);
   }
   /**
    * Gets the value of the maxGSIK from the table.

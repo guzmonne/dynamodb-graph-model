@@ -30,12 +30,6 @@ describe('Model', () => {
     ).toBe(true);
   });
 
-  describe('#promise()', () => {
-    test('should return a promise', () => {
-      expect;
-    });
-  });
-
   var documentClient = {
     put: params => ({ promise: () => Promise.resolve(params) }),
     batchWrite: params => ({ promise: () => Promise.resolve(params) }),
@@ -357,7 +351,7 @@ describe('Model', () => {
     });
   });
 
-  describe('#setNode()', () => {
+  describe('#set()', () => {
     var node = cuid();
     var tenant = cuid();
     var data = 'Data';
@@ -379,7 +373,7 @@ describe('Model', () => {
 
     test('should return a Model with the new Node', () => {
       var newNode = cuid();
-      Test.setNode(newNode);
+      Test.set(newNode);
       expect(Test.data).toEqual(undefined);
       expect(Test.node).toEqual(newNode);
       expect(Test.tenant).toEqual(tenant);
