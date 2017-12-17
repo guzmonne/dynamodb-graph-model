@@ -57,6 +57,13 @@ module.exports = function Model(options = {}) {
     _documentClient: documentClient
   });
   // ---
+  /**
+   * Adds a property to a node.
+   * @param {object} config - Configuration object.
+   * @property {any} data - Property data.
+   * @property {string} type - Connection type.
+   * @return {Promise} Results of all the performed actions.
+   */
   function addProperty(config = {}) {
     var { type, data } = config;
     var _history = [];
@@ -75,7 +82,8 @@ module.exports = function Model(options = {}) {
   /**
    * Creates a connection to another node.
    * @param {object} config - Configuration object.
-   * @property {any} endNode - Other node to connect with.
+   * @property {string|Model} target - Target node ID, or target node Model.
+   * @property {string} type - Connection type.
    * @return {Promise} Results of all the performed actions.
    */
   function connect(config = {}) {
