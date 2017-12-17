@@ -2,12 +2,9 @@
 
 var cuid = require('cuid');
 var omit = require('lodash/omit.js');
+var isObject = require('lodash/isObject.js');
+var isArray = require('lodash/isArray.js');
 
-/** AWS configuration */
-
-// ---
-
-// ---
 /**
  * Factory functions that returns a model, than can talk to a DynamoDB table
  * that is used to represent a directed graph.
@@ -89,17 +86,20 @@ module.exports = function Model(options = {}) {
 
         _history.push(response);
 
-        if (properties && properties.length > 0)
-          return db
-            .createProperties({
-              tenant,
-              node: _node,
-              maxGSIK,
-              properties
-            })
-            .then(response => {
-              _history.push(response);
-            });
+        if (properties === undefined) return;
+
+        return db
+          .createProperties({
+            tenant,
+            node: _node,
+            maxGSIK,
+            properties: isArray(properties)
+              ? properties
+              : mapToProperties(properties)
+          })
+          .then(response => {
+            _history.push(response);
+          });
       })
       .then(() => {
         return nextModel({ node: _node, history: _history });
@@ -112,7 +112,18 @@ module.exports = function Model(options = {}) {
   function promise() {
     return Promise.resolve(status);
   }
-
+  /**
+   * Transforms a PropertiesMap into a list of Properties.
+   * @param {PropertiesMap} properties - Map of properties.
+   */
+  function mapToProperties(properties) {
+    return Object.keys(properties).map(key => [key, properties[key]]);
+  }
+  /**
+   * Returns a new Model based on the current one with some overrided
+   * properties.
+   * @param {object} override - Model attributes override object.
+   */
   function nextModel(override) {
     var options = Object.assign(
       {

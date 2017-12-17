@@ -113,5 +113,50 @@ describe('Model', () => {
         ]);
       });
     });
+
+    test('should create the properties on the correct node if given a properties map', () => {
+      var properties = { One: 1, Two: 2 };
+      return Test.create({ data, properties }).then(result => {
+        var node = result.node;
+        expect(result.history[0]).toEqual({
+          TableName: table,
+          Item: {
+            Data: JSON.stringify(data),
+            Node: node,
+            Target: node,
+            Type: type,
+            GSIK: node + '#' + 1
+          }
+        });
+        expect(result.history[1]).toEqual([
+          {
+            RequestItems: {
+              TestTable: [
+                {
+                  PutRequest: {
+                    Item: {
+                      Node: node,
+                      Type: 'One',
+                      Data: '1',
+                      GSIK: node + '#1'
+                    }
+                  }
+                },
+                {
+                  PutRequest: {
+                    Item: {
+                      Node: node,
+                      Type: 'Two',
+                      Data: '2',
+                      GSIK: node + '#1'
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        ]);
+      });
+    });
   });
 });
