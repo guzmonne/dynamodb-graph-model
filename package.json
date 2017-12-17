@@ -1,0 +1,19 @@
+{
+  "name": "dynamodb-graph-model",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": {},
+  "license": "MIT",
+  "scripts": {
+    "test": "jest --watch --findRelatedTests ./__test__/*.test.js"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.171.0",
+    "cuid": "^1.3.8",
+    "dynamodb-graph": "^1.0.9",
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "jest": "^21.2.1"
+  }
+}
