@@ -162,6 +162,13 @@ describe('Model', () => {
         ]);
       });
     });
+
+    test('should throw an error if maxGSIK is undefined', () => {
+      var Test = Model({ tenant, table, type, documentClient });
+      expect(() => Test.create({ data: 'Something' })).toThrow(
+        'Max GSIK is undefined'
+      );
+    });
   });
 
   describe('#connect()', () => {
@@ -171,19 +178,23 @@ describe('Model', () => {
     var _documentClient = Object.assign({}, documentClient, {
       query: params => ({
         promise: () =>
-          Promise.resolve(
-            Object.assign({}, params, {
-              Items: [
-                {
-                  Node: nodeB,
-                  Target: nodeB,
-                  Data: JSON.stringify('Something'),
-                  GSIK: nodeB + '#1',
-                  Type: 'SomethingElse'
-                }
-              ]
-            })
-          )
+          params.ProjectionExpression === '#Node, #Type, #Data, #GSIK, #MaxGSIK'
+            ? Promise.resolve({
+                Items: [{ MaxGSIK: maxGSIK }]
+              })
+            : Promise.resolve(
+                Object.assign({}, params, {
+                  Items: [
+                    {
+                      Node: nodeB,
+                      Target: nodeB,
+                      Data: JSON.stringify('Something'),
+                      GSIK: nodeB + '#1',
+                      Type: 'SomethingElse'
+                    }
+                  ]
+                })
+              )
       })
     });
     var TestC = Model({
@@ -243,6 +254,34 @@ describe('Model', () => {
           });
         })
         .catch(error => console.log(error));
+    });
+
+    test('should get the maxGSIK value if it is undefined', () => {
+      var maxGSIK = 0;
+      var TestC = Model({
+        tenant,
+        node,
+        table,
+        type,
+        documentClient: _documentClient
+      });
+
+      return TestC.connect({
+        target: TestB,
+        type
+      }).then(result => {
+        expect(TestC.maxGSIK).toEqual(maxGSIK);
+        expect(result.history[1]).toEqual({
+          Item: {
+            Data: '"Something"',
+            GSIK: node + '#1',
+            Node: node,
+            Target: nodeB,
+            Type: 'Connection'
+          },
+          TableName: 'TestTable'
+        });
+      });
     });
   });
 

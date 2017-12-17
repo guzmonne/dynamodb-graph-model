@@ -221,46 +221,43 @@ module.exports = function Model(options = {}) {
     var { data, properties } = config;
     var _history = [];
     var _node;
-    var start = Promise.resolve();
 
     if (node) throw new Error('Node already exists');
     if (data === undefined) throw new Error('Data is undefined');
-    if (maxGSIK === undefined) start = getMaxGSIK(_history);
+    if (maxGSIK === undefined) throw new Error('Max GSIK is undefined');
 
-    return start.then(() =>
-      db
-        .createNode({
-          tenant,
-          maxGSIK,
-          type,
-          data
-        })
-        .then((response = {}) => {
-          if (response.Item === undefined) throw new Error('Item is undefined');
+    return db
+      .createNode({
+        tenant,
+        maxGSIK,
+        type,
+        data
+      })
+      .then((response = {}) => {
+        if (response.Item === undefined) throw new Error('Item is undefined');
 
-          _node = response.Item.Node;
+        _node = response.Item.Node;
 
-          _history.push(response);
+        _history.push(response);
 
-          if (properties === undefined) return;
+        if (properties === undefined) return;
 
-          return db
-            .createProperties({
-              tenant,
-              node: _node,
-              maxGSIK,
-              properties: isArray(properties)
-                ? properties
-                : mapToProperties(properties)
-            })
-            .then(response => {
-              _history.push(response);
-            });
-        })
-        .then(() => {
-          return nextModel({ node: _node, history: _history });
-        })
-    );
+        return db
+          .createProperties({
+            tenant,
+            node: _node,
+            maxGSIK,
+            properties: isArray(properties)
+              ? properties
+              : mapToProperties(properties)
+          })
+          .then(response => {
+            _history.push(response);
+          });
+      })
+      .then(() => {
+        return nextModel({ node: _node, history: _history });
+      });
   }
   /**
    * Executes the actions stored on the chain.
