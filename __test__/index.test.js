@@ -242,4 +242,44 @@ describe('Model', () => {
         .catch(error => console.log(error));
     });
   });
+
+  describe('#addProperty()', () => {
+    var node = cuid();
+    var tenant = cuid();
+    var type = 'Test';
+    var data = 'Example';
+    var maxGSIK = 0;
+    var Test = Model({ tenant, node, table, type, maxGSIK, documentClient });
+
+    test('should return a promise', () => {
+      expect(Test.addProperty({ type, data }) instanceof Promise).toBe(true);
+    });
+
+    test('should throw an error if node is undefined', () => {
+      var Test = Model({ tenant, type, table, maxGSIK, documentClient });
+      expect(() => Test.addProperty()).toThrow('Node is undefined');
+    });
+
+    test('should throw an error if type is undfined', () => {
+      expect(() => Test.addProperty({ data })).toThrow('Type is undefined');
+    });
+
+    test('should throw an error if data is undfined', () => {
+      expect(() => Test.addProperty({ type })).toThrow('Data is undefined');
+    });
+
+    test('should create the new property on the node', () => {
+      return Test.addProperty({ type, data }).then(result => {
+        expect(result.history[0]).toEqual({
+          TableName: table,
+          Item: {
+            Node: result.node,
+            Data: JSON.stringify(data),
+            Type: type,
+            GSIK: result.node + '#1'
+          }
+        });
+      });
+    });
+  });
 });

@@ -47,6 +47,7 @@ module.exports = function Model(options = {}) {
   return Object.freeze({
     create,
     connect,
+    addProperty,
     history: Object.freeze(history.slice()),
     maxGSIK,
     node,
@@ -56,7 +57,21 @@ module.exports = function Model(options = {}) {
     _documentClient: documentClient
   });
   // ---
+  function addProperty(config = {}) {
+    var { type, data } = config;
+    var _history = [];
 
+    if (node === undefined) throw new Error('Node is undefined');
+    if (type === undefined) throw new Error('Type is undefined');
+    if (data === undefined) throw new Error('Data is undefined');
+
+    return db
+      .createProperty({ tenant, node, type, data, maxGSIK })
+      .then(result => {
+        _history.push(result);
+        return nextModel({ history: _history });
+      });
+  }
   /**
    * Creates a connection to another node.
    * @param {object} config - Configuration object.
