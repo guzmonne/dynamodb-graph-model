@@ -52,7 +52,7 @@ module.exports = function Model(options = {}) {
 
   /** Return */
   var publicAPI = {
-    addProperty,
+    add,
     create,
     connect,
     get data() {
@@ -151,7 +151,7 @@ module.exports = function Model(options = {}) {
    * @property {string} type - Connection type.
    * @return {Promise} Next model with the resulting data.
    */
-  function addProperty(config = {}) {
+  function add(config = {}) {
     var { type, data } = config;
     var _history = [];
     var start = Promise.resolve();
