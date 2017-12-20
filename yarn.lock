@@ -617,9 +617,9 @@ diff@^3.2.0:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.4.0.tgz#b1d85507daf3964828de54b37d0d73ba67dda56c"
 
-dynamodb-graph@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/dynamodb-graph/-/dynamodb-graph-1.3.0.tgz#146869abcb6c5ad725ec7e956c7ea54b2f60892f"
+dynamodb-graph@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/dynamodb-graph/-/dynamodb-graph-1.3.1.tgz#8899ae81b6045bf8466f00c427dfe368018486d5"
   dependencies:
     aws-sdk "^2.169.0"
     cuid "^1.3.8"

@@ -165,7 +165,7 @@ module.exports = function Model(options = {}) {
     });
   }
   /**
-   * Adds a property to a node.
+   * Adds a property on a node.
    * @param {object} config - Configuration object.
    * @property {any} data - Property data.
    * @property {string} type - Connection type.
@@ -230,14 +230,12 @@ module.exports = function Model(options = {}) {
    * Creates a new node, and all its attached properties.
    * @param {object} config - Configuration object.
    * @property {any} data - Main data stored on the node.
-   * @property {Property[]|PropertyMap} properties - Property list, or
-   *                                                 PropertyMap to turn into a
-   *                                                 Property list, and attach
-   *                                                 to the node.
+   * @property {Edge[]} - Edges list to attach on the node.
+   * @property {Property[]} properties - Property list to attach on the node.
    * @return {Promise} Next model with the resulting data.
    */
   function create(config = {}) {
-    var { data, properties } = config;
+    var { data, properties = [], edges = [] } = config;
     var _history = [];
     var _node;
 
@@ -259,23 +257,46 @@ module.exports = function Model(options = {}) {
 
         _history.push(response);
 
-        if (properties === undefined) return;
+        var promises = [];
 
-        return db
-          .createProperties({
-            tenant,
-            node: _node,
-            maxGSIK,
-            properties: isArray(properties)
-              ? properties
-              : mapToProperties(properties)
-          })
-          .then(response => {
-            _history.push(response);
-          });
+        if (properties.length > 1)
+          promises.push(
+            db
+              .createProperties({
+                tenant,
+                node: _node,
+                maxGSIK,
+                properties
+              })
+              .then(response => {
+                _history.push(response);
+              })
+          );
+
+        if (edges.length > 1)
+          promises.push(
+            db
+              .createEdges({
+                tenant,
+                node: _node,
+                maxGSIK,
+                edges
+              })
+              .then(response => {
+                _history.push(response);
+              })
+          );
+
+        return promises.length > 0 && Promise.all(promises);
       })
       .then(() => {
-        return newModel({ node: _node, history: _history });
+        return newModel({
+          node: _node,
+          data,
+          properties,
+          edges,
+          history: _history
+        });
       });
   }
   /**
@@ -308,12 +329,18 @@ module.exports = function Model(options = {}) {
 };
 
 /**
- * Property object to attach to a node.
+ * Edge object to attach on a node.
+ * @typedef {Object} Edge
+ * @property {string} type - Edge type.
+ * @property {string} target - Target node.
+ * @property {any} data - Edge data.
+ *
+ * Property object to attach on a node.
  * @typedef {Object} Property
  * @property {string} type - Property type.
  * @property {any} data - Value of the property.
  *
  * Key/Value dictionary that can be converted into a list of properties.
  * @typedef {Object} PropertyMap
- * @property {any} [any] - Key value pairs.
+ * @property {any} any - At least one Key/Value pair.
  */

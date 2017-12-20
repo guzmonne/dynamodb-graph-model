@@ -66,8 +66,18 @@ describe('Model', () => {
         .catch(error => expect(error.message).toBe(null));
     });
 
+    var properties = [
+      {
+        Type: 'One',
+        Data: 1
+      },
+      {
+        Type: 'Two',
+        Data: 2
+      }
+    ];
+
     test('should create the properties on the correct node', () => {
-      var properties = [['One', 1], ['Two', 2]];
       return Test.create({ data, properties }).then(result => {
         var node = result.node;
         expect(result.history[0]).toEqual({
@@ -112,9 +122,15 @@ describe('Model', () => {
       });
     });
 
-    test('should create the properties on the correct node if given a properties map', () => {
-      var properties = { One: 1, Two: 2 };
-      return Test.create({ data, properties }).then(result => {
+    var targets = range(0, 3).map(() => cuid());
+    var edges = range(0, 3).map(i => ({
+      Type: `Edge ${i}`,
+      Data: `Data ${i}`,
+      Target: targets[i]
+    }));
+
+    test('should create the edges on the correct node', () => {
+      return Test.create({ data, edges }).then(result => {
         var node = result.node;
         expect(result.history[0]).toEqual({
           TableName: table,
@@ -130,28 +146,17 @@ describe('Model', () => {
         expect(result.history[1]).toEqual([
           {
             RequestItems: {
-              TestTable: [
-                {
-                  PutRequest: {
-                    Item: {
-                      Node: node,
-                      Type: 'One',
-                      Data: '1',
-                      GSIK: node + '#0'
-                    }
-                  }
-                },
-                {
-                  PutRequest: {
-                    Item: {
-                      Node: node,
-                      Type: 'Two',
-                      Data: '2',
-                      GSIK: node + '#0'
-                    }
+              TestTable: range(0, 3).map(i => ({
+                PutRequest: {
+                  Item: {
+                    Data: JSON.stringify(`Data ${i}`),
+                    Node: node,
+                    Target: targets[i],
+                    Type: `Edge ${i}`,
+                    GSIK: node + '#0'
                   }
                 }
-              ]
+              }))
             }
           }
         ]);
@@ -163,6 +168,17 @@ describe('Model', () => {
       expect(() => Test.create({ data: 'Something' })).toThrow(
         'Max GSIK is undefined'
       );
+    });
+
+    test('should return a new model with all the created data', () => {
+      return Test.create({ data, properties, edges }).then(result => {
+        var node = result.node;
+        expect(result.data).toEqual(data);
+        expect(result.properties).toEqual(properties);
+        expect(result.edges).toEqual(edges);
+        expect(result.type).toEqual(type);
+        expect(result.maxGSIK).toEqual(maxGSIK);
+      });
     });
   });
 
@@ -555,7 +571,6 @@ describe('Model', () => {
 
       var db = {
         getNodesWithPropertiesAndEdges: config => {
-          console.log(config);
           return Promise.resolve(response);
         }
       };
