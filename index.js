@@ -121,27 +121,6 @@ module.exports = function Model(options = {}) {
     return publicAPI;
   }
   /**
-   * Tracks all the actions performed on the model, and returns a function
-   * that can be called to return only the ones captured by the current
-   * tracker.
-   * @param {boolean} mutate - Flag to indicate if the history should be stored
-   *                           on the current one or on the next.
-   * @returns {function} A function that keeps tracks of events.
-   * @property {function} dump - Returns the currently tracked history.
-   */
-  function createTracker() {
-    var _history = [];
-
-    function track(args) {
-      history = history.concat(args);
-      _history = _history.concat(args);
-    }
-
-    track.dump = () => _history.slice();
-
-    return track;
-  }
-  /**
    * Gets the node data, properties, and edge information.
    * @return {Promise} Next model with the resulting data.
    */
@@ -371,19 +350,33 @@ module.exports = function Model(options = {}) {
       });
   }
   /**
-   * Transforms a PropertiesMap into a list of Properties.
-   * @param {PropertiesMap} properties - Map of properties.
-   */
-  function mapToProperties(properties) {
-    return Object.keys(properties).map(key => [key, properties[key]]);
-  }
-  /**
    * Returns a new Model based on the current one with some overrided
    * properties.
    * @param {object} override - Model attributes override object.
    */
   function newModel(override) {
     return Model(Object.assign({}, options, override));
+  }
+  /**
+   * Tracks all the actions performed on the model, and returns a function
+   * that can be called to return only the ones captured by the current
+   * tracker.
+   * @param {boolean} mutate - Flag to indicate if the history should be stored
+   *                           on the current one or on the next.
+   * @returns {function} A function that keeps tracks of events.
+   * @property {function} dump - Returns the currently tracked history.
+   */
+  function createTracker() {
+    var _history = [];
+
+    function track(args) {
+      history = history.concat(args);
+      _history = _history.concat(args);
+    }
+
+    track.dump = () => _history.slice();
+
+    return track;
   }
 };
 
