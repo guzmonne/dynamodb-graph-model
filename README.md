@@ -222,6 +222,10 @@ Book.get('cjbfbo53x0000v3vm5egmtkr7')
     // Book
     console.log(book.data);
     // Mistborn
+    console.log(book.properties);
+    // [{Type: 'Published', Data: '21/04/2005'}, ...]
+    console.log(book.edges);
+    // [{Type: 'Author', Data: '21/04/2005', Target: 'cjbfbo53x00v3vm5egmtkr7']
   })
   .catch(error => {
     console.log(error);
