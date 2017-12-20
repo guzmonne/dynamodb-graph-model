@@ -1,9 +1,11 @@
 {
   "name": "dynamodb-graph-model",
   "version": "1.0.0",
-  "main": "index.js",
-  "repository": {},
+  "repository": {
+    "github": "git@github.com:guzmonne/dynamodb-graph-model.git"
+  },
   "license": "MIT",
+  "main": "index.js",
   "scripts": {
     "test": "jest --watch --findRelatedTests ./__test__/*.test.js"
   },

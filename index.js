@@ -9,18 +9,20 @@ var isArray = require('lodash/isArray.js');
  * Factory functions that returns a model, than can talk to a DynamoDB table
  * that is used to represent a directed graph.
  * @param {object} options
- * @property {any} data - Node main data.
+ * @property {any} [data] - Node main data.
  * @property {DynamoDBGraph} [db] - DynamoDB Graph object. Useful for testing.
  * @property {DocumentClientDriver} [documentClient] - DynamoDB DocumentClient
  *                                                     driver.
- * @property {EdgesMap} edges - Map of node edges.
- * @property {object[]} history=[] - History of the model.
+ * @property {EdgesMap} [edges]=[] - Map of node edges.
+ * @property {object[]} [history]=[] - History of the model.
  * @property {number} [maxGSIK] - Maximum number of GSIK.
- * @property {string} node - Node of the current model.
+ * @property {string} [node] - Node of the current model.
  * @property {boolean} [log] - If set, all updates will include a CreatedAt or
  *                             UpdatedAt property generated along them.
- * @property {PropertyMap} properties - Map of node properties.
- * @property {string} table - Table name.
+ * @property {PropertyMap} [properties]=[] - Map of node properties.
+ * @property {string} [table] - Table name. If not provided, it will try to pull
+ *                              it from an environment variable called
+ *                              TABLE_NAME.
  * @property {string} [tenant=''] - Tenant identifier.
  * @property {string} type - Node type.
  */
@@ -29,12 +31,12 @@ module.exports = function Model(options = {}) {
     data,
     db,
     documentClient,
-    edges,
+    edges = [],
     history = [],
     maxGSIK,
     node,
     log = false,
-    properties,
+    properties = [],
     table = process.env.TABLE_NAME,
     tenant = '',
     type
@@ -47,7 +49,6 @@ module.exports = function Model(options = {}) {
 
   if (db === undefined && documentClient === undefined) {
     var AWS = require('aws-sdk');
-    AWS.config.update({ region: 'us-east-1' });
     documentClient = new AWS.DynamoDB.DocumentClient();
   }
   /** DynamoDB driver configuration */
@@ -222,7 +223,10 @@ module.exports = function Model(options = {}) {
         })
         .then(result => {
           _history.push(result);
-          return newModel({ history: _history });
+          return newModel({
+            edges: edges.concat(result.Item),
+            history: _history
+          });
         })
         .catch(error => {
           history.push(error);
@@ -352,7 +356,4 @@ module.exports = function Model(options = {}) {
  * @property {string} type - Property type.
  * @property {any} data - Value of the property.
  *
- * Key/Value dictionary that can be converted into a list of properties.
- * @typedef {Object} PropertyMap
- * @property {any} any - At least one Key/Value pair.
  */
