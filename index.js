@@ -90,7 +90,6 @@ module.exports = function Model(options = {}) {
     get properties() {
       return properties;
     },
-    set,
     _documentClient: documentClient
   };
 
@@ -111,27 +110,11 @@ module.exports = function Model(options = {}) {
       );
   }
   /**
-   * Sets the new node, and returns the other values to its default.
-   * @param {string} newNode - New node ID.
-   * @param {Model} Returns a new Model with the new node.
-   */
-  function set(newNode) {
-    history.push({ set: newNode });
-    return Promise.resolve(
-      newModel({
-        node: newNode,
-        data: undefined,
-        properties: {},
-        edges: {}
-      })
-    );
-  }
-  /**
    * Gets the node data, properties, and edge information.
    * @return {Promise} Next model with the resulting data.
    */
-  function get() {
-    var data, properties, edges;
+  function get(newNode) {
+    if (newNode !== undefined) node = newNode;
 
     var track = createTracker();
 
@@ -145,25 +128,11 @@ module.exports = function Model(options = {}) {
       .then(results => {
         var [dataResult, propertiesResult, edgesResult] = results;
         data = dataResult.Items[0].Data;
-        properties = propertiesResult.Items.reduce(
-          (acc, item) =>
-            Object.assign(acc, {
-              [item.Type]: item.Data
-            }),
-          {}
-        );
-        edges = edgesResult.Items.reduce(
-          (acc, item) =>
-            Object.assign(acc, {
-              [item.Type]: newModel({
-                node: item.Target,
-                type: item.Type,
-                data: item.Data,
-                history: [item]
-              })
-            }),
-          {}
-        );
+        properties = propertiesResult.Items.map(item => {
+          delete item.Node;
+          return item;
+        });
+        edges = edgesResult.Items;
 
         track(dataResult, propertiesResult, edgesResult);
 
@@ -251,6 +220,35 @@ module.exports = function Model(options = {}) {
           throw error;
         })
     );
+  }
+  /**
+   * Removes a property from a node.
+   * @param {string} type - Edge type.
+   * @return {Promise} Next model with the resulting data.
+   */
+  function remove(type) {
+    var track = createTracker();
+
+    if (node === undefined) throw new Error('Node is undefined');
+    if (type === undefined) throw new Error('Type is undefined');
+
+    return db
+      .deleteProperty({
+        node,
+        type
+      })
+      .then(result => {
+        track(result);
+        if (properties.length > 0)
+          properties.pop(findIndex(properties, prop => prop.Type === type));
+        return newModel({
+          history: track.dump()
+        });
+      })
+      .catch(error => {
+        track(error);
+        throw error;
+      });
   }
   /**
    * Removes a connection to another node.
@@ -371,7 +369,9 @@ module.exports = function Model(options = {}) {
    * @param {string}  - Configuration object.
    * @return {Promise} Next model with the resulting data.
    */
-  function destroy() {
+  function destroy(newNode) {
+    if (newNode !== undefined) node = newNode;
+
     if (node === undefined) throw new Error('Node is undefined');
 
     var track = createTracker();

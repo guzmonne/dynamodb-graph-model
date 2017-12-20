@@ -421,38 +421,6 @@ describe('Model', () => {
     });
   });
 
-  describe('#set()', () => {
-    var node = cuid();
-    var tenant = cuid();
-    var data = 'Data';
-    var type = 'Type';
-    var maxGSIK = 0;
-    var properties = { One: 1 };
-    var edges = {
-      Edge: Model({ tenant, node, type, table, data, maxGSIK, documentClient })
-    };
-    var Test = Model({
-      tenant,
-      node,
-      type,
-      table,
-      data,
-      maxGSIK,
-      documentClient
-    });
-
-    test('should return a Model with the new Node', () => {
-      var newNode = cuid();
-      return Test.set(newNode).then(result => {
-        expect(result.data).toEqual(undefined);
-        expect(result.node).toEqual(newNode);
-        expect(result.tenant).toEqual(tenant);
-        expect(result.properties).toEqual({});
-        expect(result.edges).toEqual({});
-      });
-    });
-  });
-
   describe('#get()', () => {
     var node = cuid();
     var target1 = cuid();
@@ -518,20 +486,38 @@ describe('Model', () => {
       expect(Test.get() instanceof Promise).toBe(true);
     });
 
+    test('should throw an error if node is undefined', () => {
+      var Test = Model({ tenant, table, type, maxGSIK, documentClient });
+      expect(() => Test.get()).toThrow('Node is undefined');
+      expect(() => Test.get(cuid())).not.toThrow();
+    });
+
     test('should query the node', () => {
       return Test.get().then(result => {
         expect(result.node).toEqual(node);
         expect(result.data).toEqual('Data Text');
-        expect(result.properties).toEqual({
-          PropertyType1: 'PropertyData1',
-          PropertyType2: 'PropertyData2'
-        });
-        expect(result.edges.EdgeType1.node).toEqual(target1);
-        expect(result.edges.EdgeType1.type).toEqual('EdgeType1');
-        expect(result.edges.EdgeType1.data).toEqual('EdgeData1');
-        expect(result.edges.EdgeType2.node).toEqual(target2);
-        expect(result.edges.EdgeType2.type).toEqual('EdgeType2');
-        expect(result.edges.EdgeType2.data).toEqual('EdgeData2');
+        expect(result.properties).toEqual([
+          {
+            Data: 'PropertyData1',
+            Type: 'PropertyType1'
+          },
+          {
+            Data: 'PropertyData2',
+            Type: 'PropertyType2'
+          }
+        ]);
+        expect(result.edges).toEqual([
+          {
+            Data: 'EdgeData1',
+            Target: target1,
+            Type: 'EdgeType1'
+          },
+          {
+            Data: 'EdgeData2',
+            Target: target2,
+            Type: 'EdgeType2'
+          }
+        ]);
       });
     });
   });
