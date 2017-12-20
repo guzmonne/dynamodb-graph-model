@@ -91,34 +91,32 @@ describe('Model', () => {
             MaxGSIK: 0
           }
         });
-        expect(result.history[1]).toEqual([
-          {
-            RequestItems: {
-              TestTable: [
-                {
-                  PutRequest: {
-                    Item: {
-                      Node: node,
-                      Type: 'One',
-                      Data: '1',
-                      GSIK: node + '#0'
-                    }
-                  }
-                },
-                {
-                  PutRequest: {
-                    Item: {
-                      Node: node,
-                      Type: 'Two',
-                      Data: '2',
-                      GSIK: node + '#0'
-                    }
+        expect(result.history[1]).toEqual({
+          RequestItems: {
+            TestTable: [
+              {
+                PutRequest: {
+                  Item: {
+                    Node: node,
+                    Type: 'One',
+                    Data: '1',
+                    GSIK: node + '#0'
                   }
                 }
-              ]
-            }
+              },
+              {
+                PutRequest: {
+                  Item: {
+                    Node: node,
+                    Type: 'Two',
+                    Data: '2',
+                    GSIK: node + '#0'
+                  }
+                }
+              }
+            ]
           }
-        ]);
+        });
       });
     });
 
@@ -143,23 +141,21 @@ describe('Model', () => {
             MaxGSIK: 0
           }
         });
-        expect(result.history[1]).toEqual([
-          {
-            RequestItems: {
-              TestTable: range(0, 3).map(i => ({
-                PutRequest: {
-                  Item: {
-                    Data: JSON.stringify(`Data ${i}`),
-                    Node: node,
-                    Target: targets[i],
-                    Type: `Edge ${i}`,
-                    GSIK: node + '#0'
-                  }
+        expect(result.history[1]).toEqual({
+          RequestItems: {
+            TestTable: range(0, 3).map(i => ({
+              PutRequest: {
+                Item: {
+                  Data: JSON.stringify(`Data ${i}`),
+                  Node: node,
+                  Target: targets[i],
+                  Type: `Edge ${i}`,
+                  GSIK: node + '#0'
                 }
-              }))
-            }
+              }
+            }))
           }
-        ]);
+        });
       });
     });
 
@@ -194,6 +190,8 @@ describe('Model', () => {
       return Test.create({ data })
         .then(result => {
           var node = result.node;
+          var now =
+            result.history[1].RequestItems.TestTable[0].PutRequest.Item.Data;
           expect(result.history[0]).toEqual({
             TableName: table,
             Item: {
@@ -205,34 +203,32 @@ describe('Model', () => {
               MaxGSIK: 0
             }
           });
-          expect(result.history[1]).toEqual([
-            {
-              RequestItems: {
-                TestTable: [
-                  {
-                    PutRequest: {
-                      Item: {
-                        Node: node,
-                        Type: 'CreatedAt',
-                        Data: JSON.stringify(now),
-                        GSIK: node + '#0'
-                      }
-                    }
-                  },
-                  {
-                    PutRequest: {
-                      Item: {
-                        Node: node,
-                        Type: 'UpdatedAt',
-                        Data: JSON.stringify(now),
-                        GSIK: node + '#0'
-                      }
+          expect(result.history[1]).toEqual({
+            RequestItems: {
+              TestTable: [
+                {
+                  PutRequest: {
+                    Item: {
+                      Node: node,
+                      Type: 'CreatedAt',
+                      Data: now,
+                      GSIK: node + '#0'
                     }
                   }
-                ]
-              }
+                },
+                {
+                  PutRequest: {
+                    Item: {
+                      Node: node,
+                      Type: 'UpdatedAt',
+                      Data: now,
+                      GSIK: node + '#0'
+                    }
+                  }
+                }
+              ]
             }
-          ]);
+          });
         })
         .catch(error => expect(error.message).toBe(null));
     });

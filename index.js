@@ -94,8 +94,6 @@ module.exports = function Model(options = {}) {
   return publicAPI;
   // ---
   function collection() {
-    var _history = [];
-
     return db
       .getNodesWithPropertiesAndEdges({ type, tenant, maxGSIK })
       .then(response =>
@@ -123,14 +121,34 @@ module.exports = function Model(options = {}) {
     return publicAPI;
   }
   /**
+   * Tracks all the actions performed on the model, and returns a function
+   * that can be called to return only the ones captured by the current
+   * tracker.
+   * @param {boolean} mutate - Flag to indicate if the history should be stored
+   *                           on the current one or on the next.
+   * @returns {function} A function that keeps tracks of events.
+   * @property {function} dump - Returns the currently tracked history.
+   */
+  function createTracker() {
+    var _history = [];
+
+    function track(args) {
+      history = history.concat(args);
+      _history = _history.concat(args);
+    }
+
+    track.dump = () => _history.slice();
+
+    return track;
+  }
+  /**
    * Gets the node data, properties, and edge information.
    * @return {Promise} Next model with the resulting data.
    */
   function get() {
-    var _history = [],
-      data,
-      properties,
-      edges;
+    var data, properties, edges;
+
+    var track = createTracker();
 
     if (node === undefined) throw new Error('Node is undefined');
 
@@ -138,36 +156,43 @@ module.exports = function Model(options = {}) {
       db.getNodeData(node),
       db.getNodeProperties(node),
       db.getNodeEdges(node)
-    ]).then(results => {
-      var [dataResult, propertiesResult, edgesResult] = results;
-      data = dataResult.Items[0].Data;
-      properties = propertiesResult.Items.reduce(
-        (acc, item) =>
-          Object.assign(acc, {
-            [item.Type]: item.Data
-          }),
-        {}
-      );
-      edges = edgesResult.Items.reduce(
-        (acc, item) =>
-          Object.assign(acc, {
-            [item.Type]: newModel({
-              node: item.Target,
-              type: item.Type,
-              data: item.Data,
-              history: [item]
-            })
-          }),
-        {}
-      );
-      _history = _history.concat([dataResult, propertiesResult, edgesResult]);
-      return newModel({
-        history: _history,
-        data,
-        properties,
-        edges
+    ])
+      .then(results => {
+        var [dataResult, propertiesResult, edgesResult] = results;
+        data = dataResult.Items[0].Data;
+        properties = propertiesResult.Items.reduce(
+          (acc, item) =>
+            Object.assign(acc, {
+              [item.Type]: item.Data
+            }),
+          {}
+        );
+        edges = edgesResult.Items.reduce(
+          (acc, item) =>
+            Object.assign(acc, {
+              [item.Type]: newModel({
+                node: item.Target,
+                type: item.Type,
+                data: item.Data,
+                history: [item]
+              })
+            }),
+          {}
+        );
+
+        track(dataResult, propertiesResult, edgesResult);
+
+        return newModel({
+          history: track.dump(),
+          data,
+          properties,
+          edges
+        });
+      })
+      .catch(error => {
+        track(error);
+        throw error;
       });
-    });
   }
   /**
    * Adds a property on a node.
@@ -178,19 +203,26 @@ module.exports = function Model(options = {}) {
    */
   function add(config = {}) {
     var { type, data } = config;
-    var _history = [];
+    var track = createTracker();
     var start = Promise.resolve();
 
     if (node === undefined) throw new Error('Node is undefined');
     if (type === undefined) throw new Error('Type is undefined');
     if (data === undefined) throw new Error('Data is undefined');
-    if (maxGSIK === undefined) start = getMaxGSIK(_history);
+    if (maxGSIK === undefined)
+      start = getMaxGSIK().then(response => track(response));
 
     return start.then(() =>
-      db.createProperty({ tenant, node, type, data, maxGSIK }).then(result => {
-        _history.push(result);
-        return newModel({ history: _history });
-      })
+      db
+        .createProperty({ tenant, node, type, data, maxGSIK })
+        .then(result => {
+          track(result);
+          return newModel({ history: track.dump() });
+        })
+        .catch(error => {
+          track(error);
+          throw error;
+        })
     );
   }
   /**
@@ -202,7 +234,7 @@ module.exports = function Model(options = {}) {
    */
   function connect(config = {}) {
     var { target, type } = config;
-    var _history = [];
+    var track = createTracker();
     var start = Promise.resolve();
 
     if (isObject(target) && target.node) target = target.node;
@@ -210,7 +242,8 @@ module.exports = function Model(options = {}) {
     if (node === undefined) throw new Error('Node is undefined');
     if (type === undefined) throw new Error('Type is undefined');
     if (target === undefined) throw new Error('Target is undefined');
-    if (maxGSIK === undefined) start = getMaxGSIK(_history);
+    if (maxGSIK === undefined)
+      start = getMaxGSIK().then(response => track(response));
 
     return start.then(() =>
       db
@@ -222,14 +255,14 @@ module.exports = function Model(options = {}) {
           maxGSIK
         })
         .then(result => {
-          _history.push(result);
+          track(result);
           return newModel({
             edges: edges.concat(result.Item),
-            history: _history
+            history: track.dump()
           });
         })
         .catch(error => {
-          history.push(error);
+          track(error);
           throw error;
         })
     );
@@ -244,7 +277,7 @@ module.exports = function Model(options = {}) {
    */
   function create(config = {}) {
     var { data, properties = [], edges = [] } = config;
-    var _history = [];
+    var track = createTracker();
     var _node;
 
     if (node) throw new Error('Node already exists');
@@ -263,7 +296,7 @@ module.exports = function Model(options = {}) {
 
         _node = response.Item.Node;
 
-        _history.push(response);
+        track(response);
 
         if (log === true) {
           var now = Date.now();
@@ -285,7 +318,7 @@ module.exports = function Model(options = {}) {
                 properties
               })
               .then(response => {
-                _history.push(response);
+                track(response);
               })
           );
 
@@ -299,7 +332,7 @@ module.exports = function Model(options = {}) {
                 edges
               })
               .then(response => {
-                _history.push(response);
+                track(response);
               })
           );
 
@@ -311,21 +344,31 @@ module.exports = function Model(options = {}) {
           data,
           properties,
           edges,
-          history: _history
+          history: track.dump()
         });
+      })
+      .catch(error => {
+        track(error);
+        throw error;
       });
   }
   /**
    * Gets the value of the maxGSIK from the table.
    * @returns {Promise} Empty chain to continue the work.
    */
-  function getMaxGSIK(history) {
-    return db.getNode(node).then(response => {
-      var item = response.Items[0];
-      maxGSIK = item.MaxGSIK;
-      if (maxGSIK === undefined) throw new Error('Max GSIK is undefined');
-      history.push(response);
-    });
+  function getMaxGSIK() {
+    return db
+      .getNode(node)
+      .then(response => {
+        var item = response.Items[0];
+        maxGSIK = item.MaxGSIK;
+        if (maxGSIK === undefined) throw new Error('Max GSIK is undefined');
+        return response;
+      })
+      .catch(error => {
+        track(error);
+        throw error;
+      });
   }
   /**
    * Transforms a PropertiesMap into a list of Properties.
