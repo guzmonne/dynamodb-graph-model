@@ -69,7 +69,7 @@ module.exports = function Model(options = {}) {
       return data;
     },
     destroy,
-    disconnect,
+    disconnect: remove,
     get edges() {
       return edges;
     },
@@ -90,6 +90,7 @@ module.exports = function Model(options = {}) {
     get properties() {
       return properties;
     },
+    remove,
     _documentClient: documentClient
   };
 
@@ -233,43 +234,22 @@ module.exports = function Model(options = {}) {
     if (type === undefined) throw new Error('Type is undefined');
 
     return db
-      .deleteProperty({
+      .deletePropertyOrEdge({
         node,
         type
       })
       .then(result => {
         track(result);
-        if (properties.length > 0)
-          properties.pop(findIndex(properties, prop => prop.Type === type));
-        return newModel({
-          history: track.dump()
-        });
-      })
-      .catch(error => {
-        track(error);
-        throw error;
-      });
-  }
-  /**
-   * Removes a connection to another node.
-   * @param {string} type - Edge type.
-   * @return {Promise} Next model with the resulting data.
-   */
-  function disconnect(type) {
-    var track = createTracker();
+        if (properties.length > 0) {
+          var index = findIndex(properties, prop => prop.Type === type);
+          index > -1 && properties.pop(index);
+        }
 
-    if (node === undefined) throw new Error('Node is undefined');
-    if (type === undefined) throw new Error('Type is undefined');
+        if (edges.length > 0) {
+          var index = findIndex(edges, edge => edge.Type === type);
+          index > -1 && edges.pop(index);
+        }
 
-    return db
-      .deleteEdge({
-        node,
-        type
-      })
-      .then(result => {
-        track(result);
-        if (edges.length > 0)
-          edges.pop(findIndex(edges, edge => edge.Type === type));
         return newModel({
           history: track.dump()
         });

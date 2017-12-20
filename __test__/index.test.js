@@ -671,9 +671,9 @@ describe('Model', () => {
     });
   });
 
-  describe('#disconnect()', () => {
+  describe('#remove()|#disconnect()', () => {
     var db = () => ({
-      deleteEdge: () => Promise.resolve({})
+      deletePropertyOrEdge: () => Promise.resolve({})
     });
 
     var tenant = cuid();
