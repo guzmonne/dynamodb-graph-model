@@ -684,4 +684,49 @@ describe('Model', () => {
       });
     });
   });
+
+  describe('#disconnect()', () => {
+    var db = () => ({
+      deleteEdge: () => Promise.resolve({})
+    });
+
+    var tenant = cuid();
+    var node = tenant + '#' + cuid();
+    var edge = 'edge';
+    var Test = Model({ tenant, node, table, type, db: db(), maxGSIK: 0 });
+
+    test('should return a promise', () => {
+      expect(Test.disconnect(edge) instanceof Promise).toBe(true);
+    });
+
+    test('should throw if node is undefined', () => {
+      var Test = Model({ tenant, table, type, db: db(), maxGSIK: 0 });
+      expect(() => Test.disconnect(edge)).toThrow('Node is undefined');
+    });
+
+    test('should throw if type is undefined', () => {
+      expect(() => Test.disconnect()).toThrow('Type is undefined');
+    });
+
+    test('should delete the given edge', () => {
+      var Test = Model({
+        tenant,
+        node,
+        table,
+        type,
+        db: db(),
+        maxGSIK: 0,
+        data: 'Data',
+        properties: [{ Type: 'Prop', Data: 1 }],
+        edges: [{ Type: edge, Target: cuid(), Data: 'Test' }]
+      });
+
+      return Test.disconnect(edge).then(result => {
+        expect(result.node).toEqual(node);
+        expect(result.data).toEqual('Data');
+        expect(result.properties).toEqual([{ Type: 'Prop', Data: 1 }]);
+        expect(result.edges).toEqual([]);
+      });
+    });
+  });
 });

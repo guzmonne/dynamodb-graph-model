@@ -2,6 +2,7 @@
 
 var cuid = require('cuid');
 var omit = require('lodash/omit.js');
+var findIndex = require('lodash/findIndex');
 var isObject = require('lodash/isObject.js');
 var isArray = require('lodash/isArray.js');
 
@@ -68,6 +69,7 @@ module.exports = function Model(options = {}) {
       return data;
     },
     destroy,
+    disconnect,
     get edges() {
       return edges;
     },
@@ -251,6 +253,35 @@ module.exports = function Model(options = {}) {
     );
   }
   /**
+   * Removes a connection to another node.
+   * @param {string} type - Edge type.
+   * @return {Promise} Next model with the resulting data.
+   */
+  function disconnect(type) {
+    var track = createTracker();
+
+    if (node === undefined) throw new Error('Node is undefined');
+    if (type === undefined) throw new Error('Type is undefined');
+
+    return db
+      .deleteEdge({
+        node,
+        type
+      })
+      .then(result => {
+        track(result);
+        if (edges.length > 0)
+          edges.pop(findIndex(edges, edge => edge.Type === type));
+        return newModel({
+          history: track.dump()
+        });
+      })
+      .catch(error => {
+        track(error);
+        throw error;
+      });
+  }
+  /**
    * Creates a new node, with its properties and edges.
    * @param {object} config - Configuration object.
    * @property {any} data - Main data stored on the node.
@@ -349,13 +380,7 @@ module.exports = function Model(options = {}) {
       .deleteNode(node)
       .then(response => {
         track(response);
-        return newModel({
-          node: undefined,
-          data: undefined,
-          properties: [],
-          edges: [],
-          history: track.dump()
-        });
+        return emptyModel(track.dump());
       })
       .catch(error => {
         track(error);
@@ -387,6 +412,20 @@ module.exports = function Model(options = {}) {
    */
   function newModel(override) {
     return Model(Object.assign({}, options, override));
+  }
+  /**
+   * Returns a new empty model.
+   * @param {array} history - List of actions that created this empty model.
+   * @returns {Model} New empty model.
+   */
+  function emptyModel(history) {
+    return newModel({
+      node: undefined,
+      data: undefined,
+      properties: [],
+      edges: [],
+      history
+    });
   }
   /**
    * Tracks all the actions performed on the model, and returns a function
