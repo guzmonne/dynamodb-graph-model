@@ -442,12 +442,13 @@ describe('Model', () => {
 
     test('should return a Model with the new Node', () => {
       var newNode = cuid();
-      Test.set(newNode);
-      expect(Test.data).toEqual(undefined);
-      expect(Test.node).toEqual(newNode);
-      expect(Test.tenant).toEqual(tenant);
-      expect(Test.properties).toEqual({});
-      expect(Test.edges).toEqual({});
+      return Test.set(newNode).then(result => {
+        expect(result.data).toEqual(undefined);
+        expect(result.node).toEqual(newNode);
+        expect(result.tenant).toEqual(tenant);
+        expect(result.properties).toEqual({});
+        expect(result.edges).toEqual({});
+      });
     });
   });
 

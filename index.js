@@ -113,12 +113,15 @@ module.exports = function Model(options = {}) {
    * @param {Model} Returns a new Model with the new node.
    */
   function set(newNode) {
-    node = newNode;
-    data = undefined;
-    properties = {};
-    edges = {};
     history.push({ set: newNode });
-    return publicAPI;
+    return Promise.resolve(
+      newModel({
+        node: newNode,
+        data: undefined,
+        properties: {},
+        edges: {}
+      })
+    );
   }
   /**
    * Gets the node data, properties, and edge information.
@@ -247,7 +250,7 @@ module.exports = function Model(options = {}) {
     );
   }
   /**
-   * Creates a new node, and all its attached properties.
+   * Creates a new node, with its properties and edges.
    * @param {object} config - Configuration object.
    * @property {any} data - Main data stored on the node.
    * @property {Edge[]} - Edges list to attach on the node.
@@ -331,6 +334,12 @@ module.exports = function Model(options = {}) {
         throw error;
       });
   }
+  /**
+   * Destroys a node, and all its attached properties and edges.
+   * @param {string}  - Configuration object.
+   * @return {Promise} Next model with the resulting data.
+   */
+  function destroy() {}
   /**
    * Gets the value of the maxGSIK from the table.
    * @returns {Promise} Empty chain to continue the work.
