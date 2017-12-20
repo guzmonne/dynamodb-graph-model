@@ -14,6 +14,7 @@ var isArray = require('lodash/isArray.js');
  * @property {number} [maxGSIK] - Maximum number of GSIK.
  * @property {DocumentClientDriver} [documentClient] - DynamoDB DocumentClient
  *                                                     driver.
+ * @property {DynamoDBGraph} [db] - DynamoDB Graph object. Useful for testing.
  * @property {object[]} history=[] - History of the model.
  * @property {PropertyMap} properties - Map of node properties.
  * @property {EdgesMap} edges - Map of node edges.
@@ -22,16 +23,17 @@ var isArray = require('lodash/isArray.js');
  */
 module.exports = function Model(options = {}) {
   var {
+    data,
+    db,
     documentClient,
+    edges,
+    history = [],
     maxGSIK,
     node,
+    properties,
     table = process.env.TABLE_NAME,
     tenant = '',
-    type,
-    history = [],
-    properties,
-    edges,
-    data
+    type
   } = options;
 
   if (type === undefined) throw new Error('Type is undefined');
@@ -39,22 +41,24 @@ module.exports = function Model(options = {}) {
     throw new Error('Max GSIK is not a number');
   if (table === undefined) throw new Error('Table is undefined');
 
-  if (documentClient === undefined) {
+  if (db === undefined && documentClient === undefined) {
     var AWS = require('aws-sdk');
     AWS.config.update({ region: 'us-east-1' });
     documentClient = new AWS.DynamoDB.DocumentClient();
   }
   /** DynamoDB driver configuration */
-  var db = require('dynamodb-graph')({
-    db: documentClient,
-    table: table
-  });
+  db ||
+    (db = require('dynamodb-graph')({
+      db: documentClient,
+      table: table
+    }));
 
   /** Return */
   var publicAPI = {
     add,
     create,
     connect,
+    collection,
     get data() {
       return data;
     },
@@ -84,6 +88,22 @@ module.exports = function Model(options = {}) {
 
   return publicAPI;
   // ---
+  function collection() {
+    var _history = [];
+
+    return db
+      .getNodesWithPropertiesAndEdges({ type, tenant, maxGSIK })
+      .then(response =>
+        response.Items.map(item =>
+          newModel({
+            node: item.Node,
+            data: item.Data,
+            properties: item.Properties,
+            edges: item.Edges
+          })
+        )
+      );
+  }
   /**
    * Sets the new node, and returns the other values to its default.
    * @param {string} newNode - New node ID.
@@ -126,7 +146,7 @@ module.exports = function Model(options = {}) {
       edges = edgesResult.Items.reduce(
         (acc, item) =>
           Object.assign(acc, {
-            [item.Type]: nextModel({
+            [item.Type]: newModel({
               node: item.Target,
               type: item.Type,
               data: item.Data,
@@ -136,7 +156,7 @@ module.exports = function Model(options = {}) {
         {}
       );
       _history = _history.concat([dataResult, propertiesResult, edgesResult]);
-      return nextModel({
+      return newModel({
         history: _history,
         data,
         properties,
@@ -164,7 +184,7 @@ module.exports = function Model(options = {}) {
     return start.then(() =>
       db.createProperty({ tenant, node, type, data, maxGSIK }).then(result => {
         _history.push(result);
-        return nextModel({ history: _history });
+        return newModel({ history: _history });
       })
     );
   }
@@ -198,7 +218,7 @@ module.exports = function Model(options = {}) {
         })
         .then(result => {
           _history.push(result);
-          return nextModel({ history: _history });
+          return newModel({ history: _history });
         })
         .catch(error => {
           history.push(error);
@@ -255,7 +275,7 @@ module.exports = function Model(options = {}) {
           });
       })
       .then(() => {
-        return nextModel({ node: _node, history: _history });
+        return newModel({ node: _node, history: _history });
       });
   }
   /**
@@ -282,23 +302,8 @@ module.exports = function Model(options = {}) {
    * properties.
    * @param {object} override - Model attributes override object.
    */
-  function nextModel(override) {
-    var options = Object.assign(
-      {
-        edges,
-        data,
-        documentClient,
-        maxGSIK,
-        node,
-        properties,
-        table,
-        type,
-        tenant,
-        _history: history
-      },
-      override
-    );
-    return Model(options);
+  function newModel(override) {
+    return Model(Object.assign({}, options, override));
   }
 };
 

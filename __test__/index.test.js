@@ -1,6 +1,7 @@
 'use strict';
 
 var AWS = require('aws-sdk');
+var range = require('lodash/range');
 var cuid = require('cuid');
 var Model = require('../index.js');
 
@@ -56,7 +57,7 @@ describe('Model', () => {
               Node: node,
               Target: node,
               Type: type,
-              GSIK: node + '#' + 1,
+              GSIK: node + '#0',
               MaxGSIK: 0
             }
           });
@@ -76,7 +77,7 @@ describe('Model', () => {
             Node: node,
             Target: node,
             Type: type,
-            GSIK: node + '#' + 1,
+            GSIK: node + '#0',
             MaxGSIK: 0
           }
         });
@@ -90,7 +91,7 @@ describe('Model', () => {
                       Node: node,
                       Type: 'One',
                       Data: '1',
-                      GSIK: node + '#1'
+                      GSIK: node + '#0'
                     }
                   }
                 },
@@ -100,7 +101,7 @@ describe('Model', () => {
                       Node: node,
                       Type: 'Two',
                       Data: '2',
-                      GSIK: node + '#1'
+                      GSIK: node + '#0'
                     }
                   }
                 }
@@ -122,7 +123,7 @@ describe('Model', () => {
             Node: node,
             Target: node,
             Type: type,
-            GSIK: node + '#' + 1,
+            GSIK: node + '#0',
             MaxGSIK: 0
           }
         });
@@ -136,7 +137,7 @@ describe('Model', () => {
                       Node: node,
                       Type: 'One',
                       Data: '1',
-                      GSIK: node + '#1'
+                      GSIK: node + '#0'
                     }
                   }
                 },
@@ -146,7 +147,7 @@ describe('Model', () => {
                       Node: node,
                       Type: 'Two',
                       Data: '2',
-                      GSIK: node + '#1'
+                      GSIK: node + '#0'
                     }
                   }
                 }
@@ -183,7 +184,7 @@ describe('Model', () => {
                       Node: nodeB,
                       Target: nodeB,
                       Data: JSON.stringify('Something'),
-                      GSIK: nodeB + '#1',
+                      GSIK: nodeB + '#0',
                       Type: 'SomethingElse'
                     }
                   ]
@@ -239,7 +240,7 @@ describe('Model', () => {
           expect(result.history[0]).toEqual({
             Item: {
               Data: '"Something"',
-              GSIK: node + '#1',
+              GSIK: node + '#0',
               Node: node,
               Target: nodeB,
               Type: 'Connection'
@@ -268,7 +269,7 @@ describe('Model', () => {
         expect(result.history[1]).toEqual({
           Item: {
             Data: '"Something"',
-            GSIK: node + '#1',
+            GSIK: node + '#0',
             Node: node,
             Target: nodeB,
             Type: 'Connection'
@@ -312,7 +313,7 @@ describe('Model', () => {
             Node: result.node,
             Data: JSON.stringify(data),
             Type: type,
-            GSIK: result.node + '#1'
+            GSIK: result.node + '#0'
           }
         });
       });
@@ -344,7 +345,7 @@ describe('Model', () => {
             Node: result.node,
             Data: JSON.stringify(data),
             Type: type,
-            GSIK: result.node + '#1'
+            GSIK: result.node + '#0'
           }
         });
       });
@@ -431,7 +432,7 @@ describe('Model', () => {
                     Node: node,
                     Type: type,
                     Data: JSON.stringify('Data Text'),
-                    GSIK: node + '#1',
+                    GSIK: node + '#0',
                     MaxGSIK: 0
                   }
                 ]
@@ -461,6 +462,126 @@ describe('Model', () => {
         expect(result.edges.EdgeType2.node).toEqual(target2);
         expect(result.edges.EdgeType2.type).toEqual('EdgeType2');
         expect(result.edges.EdgeType2.data).toEqual('EdgeData2');
+      });
+    });
+  });
+
+  describe('#collection()', () => {
+    test('should return a promise', () => {
+      expect(Test.collection() instanceof Promise).toBe(true);
+    });
+
+    test('should return a list of models', () => {
+      var cuids = range(0, 6).map(() => cuid());
+      var targets = range(0, 6).map(() => cuid());
+      var response = {
+        Count: 6,
+        Items: [
+          {
+            Data: 'Data 0',
+            Edges: [
+              {
+                Data: 'Edge 0',
+                Node: cuids[0],
+                Target: targets[0]
+              }
+            ],
+            Node: cuids[0],
+            Properties: [{ Data: 'Prop 0', Node: cuids[0] }]
+          },
+          {
+            Data: 'Data 0',
+            Edges: [
+              {
+                Data: 'Edge 1',
+                Node: cuids[1],
+                Target: targets[1]
+              }
+            ],
+            Node: cuids[1],
+            Properties: [{ Data: 'Prop 1', Node: cuids[1] }]
+          },
+          {
+            Data: 'Data 1',
+            Edges: [
+              {
+                Data: 'Edge 2',
+                Node: cuids[2],
+                Target: targets[2]
+              }
+            ],
+            Node: cuids[2],
+            Properties: [{ Data: 'Prop 2', Node: cuids[2] }]
+          },
+          {
+            Data: 'Data 1',
+            Edges: [
+              {
+                Data: 'Edge 3',
+                Node: cuids[3],
+                Target: targets[3]
+              }
+            ],
+            Node: cuids[3],
+            Properties: [{ Data: 'Prop 3', Node: cuids[3] }]
+          },
+          {
+            Data: 'Data 2',
+            Edges: [
+              {
+                Data: 'Edge 4',
+                Node: cuids[4],
+                Target: targets[4]
+              }
+            ],
+            Node: cuids[4],
+            Properties: [{ Data: 'Prop 4', Node: cuids[4] }]
+          },
+          {
+            Data: 'Data 2',
+            Edges: [
+              {
+                Data: 'Edge 5',
+                Node: cuids[5],
+                Target: targets[5]
+              }
+            ],
+            Node: cuids[5],
+            Properties: [{ Data: 'Prop 5', Node: cuids[5] }]
+          }
+        ],
+        ScannedCount: 60
+      };
+
+      var db = {
+        getNodesWithPropertiesAndEdges: config => {
+          console.log(config);
+          return Promise.resolve(response);
+        }
+      };
+
+      var Test = Model({ tenant, table, type, maxGSIK, db });
+
+      return Test.collection().then(results => {
+        range(0, 6).forEach(i => {
+          var model = results[i];
+          expect(model.node).toEqual(cuids[i]);
+          expect(model.edges).toEqual([
+            {
+              Data: `Edge ${i}`,
+              Node: cuids[i],
+              Target: targets[i]
+            }
+          ]);
+          expect(model.tenant).toEqual(tenant);
+          expect(model.type).toEqual(type);
+          expect(model.properties).toEqual([
+            {
+              Data: `Prop ${i}`,
+              Node: cuids[i]
+            }
+          ]);
+        });
       });
     });
   });
