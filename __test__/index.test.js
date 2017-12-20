@@ -34,7 +34,8 @@ describe('Model', () => {
   var documentClient = {
     put: params => ({ promise: () => Promise.resolve(params) }),
     batchWrite: params => ({ promise: () => Promise.resolve(params) }),
-    query: params => ({ promise: () => Promise.resolve(params) })
+    query: params => ({ promise: () => Promise.resolve(params) }),
+    delete: params => ({ promise: () => Promise.resolve(params) })
   };
   var maxGSIK = 0;
   var data = 'example';
@@ -650,6 +651,36 @@ describe('Model', () => {
             }
           ]);
         });
+      });
+    });
+  });
+
+  describe('#destroy()', () => {
+    test('should throw an error if node is undefined', () => {
+      expect(() => Model({ type, table, documentClient }).destroy()).toThrow(
+        'Node is undefined'
+      );
+    });
+
+    var node = cuid();
+
+    var db = () => ({
+      deleteNode: params => Promise.resolve([{}, {}, {}])
+    });
+
+    var Test = Model({ type, table, db: db(), node });
+
+    test('should return a promise', () => {
+      expect(Test.destroy() instanceof Promise).toBe(true);
+    });
+
+    test('should destroy the node on the DynamoDB table', () => {
+      return Test.destroy().then(result => {
+        expect(result.type).toEqual(type);
+        expect(result.node).toEqual(undefined);
+        expect(result.properties).toEqual([]);
+        expect(result.edges).toEqual([]);
+        expect(result.history).toEqual([{}, {}, {}]);
       });
     });
   });

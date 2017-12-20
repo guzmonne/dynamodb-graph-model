@@ -67,6 +67,7 @@ module.exports = function Model(options = {}) {
     get data() {
       return data;
     },
+    destroy,
     get edges() {
       return edges;
     },
@@ -339,7 +340,28 @@ module.exports = function Model(options = {}) {
    * @param {string}  - Configuration object.
    * @return {Promise} Next model with the resulting data.
    */
-  function destroy() {}
+  function destroy() {
+    if (node === undefined) throw new Error('Node is undefined');
+
+    var track = createTracker();
+
+    return db
+      .deleteNode(node)
+      .then(response => {
+        track(response);
+        return newModel({
+          node: undefined,
+          data: undefined,
+          properties: [],
+          edges: [],
+          history: track.dump()
+        });
+      })
+      .catch(error => {
+        track(error);
+        throw error;
+      });
+  }
   /**
    * Gets the value of the maxGSIK from the table.
    * @returns {Promise} Empty chain to continue the work.
