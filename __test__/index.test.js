@@ -180,6 +180,62 @@ describe('Model', () => {
         expect(result.maxGSIK).toEqual(maxGSIK);
       });
     });
+
+    test('should add a CreatedAt and UpdatedAt property if the `log` flag is set to true', () => {
+      var Test = Model({
+        tenant,
+        table,
+        type,
+        maxGSIK,
+        documentClient,
+        log: true
+      });
+      var now = Date.now();
+      return Test.create({ data })
+        .then(result => {
+          var node = result.node;
+          expect(result.history[0]).toEqual({
+            TableName: table,
+            Item: {
+              Data: JSON.stringify(data),
+              Node: node,
+              Target: node,
+              Type: type,
+              GSIK: node + '#0',
+              MaxGSIK: 0
+            }
+          });
+          expect(result.history[1]).toEqual([
+            {
+              RequestItems: {
+                TestTable: [
+                  {
+                    PutRequest: {
+                      Item: {
+                        Node: node,
+                        Type: 'CreatedAt',
+                        Data: JSON.stringify(now),
+                        GSIK: node + '#0'
+                      }
+                    }
+                  },
+                  {
+                    PutRequest: {
+                      Item: {
+                        Node: node,
+                        Type: 'UpdatedAt',
+                        Data: JSON.stringify(now),
+                        GSIK: node + '#0'
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]);
+        })
+        .catch(error => expect(error.message).toBe(null));
+    });
   });
 
   describe('#connect()', () => {

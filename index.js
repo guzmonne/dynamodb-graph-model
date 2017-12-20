@@ -9,17 +9,20 @@ var isArray = require('lodash/isArray.js');
  * Factory functions that returns a model, than can talk to a DynamoDB table
  * that is used to represent a directed graph.
  * @param {object} options
- * @property {string} type - Node type.
- * @property {string} [tenant=''] - Tenant identifier.
- * @property {number} [maxGSIK] - Maximum number of GSIK.
+ * @property {any} data - Node main data.
+ * @property {DynamoDBGraph} [db] - DynamoDB Graph object. Useful for testing.
  * @property {DocumentClientDriver} [documentClient] - DynamoDB DocumentClient
  *                                                     driver.
- * @property {DynamoDBGraph} [db] - DynamoDB Graph object. Useful for testing.
- * @property {object[]} history=[] - History of the model.
- * @property {PropertyMap} properties - Map of node properties.
  * @property {EdgesMap} edges - Map of node edges.
- * @property {any} data - Node main data.
+ * @property {object[]} history=[] - History of the model.
+ * @property {number} [maxGSIK] - Maximum number of GSIK.
  * @property {string} node - Node of the current model.
+ * @property {boolean} [log] - If set, all updates will include a CreatedAt or
+ *                             UpdatedAt property generated along them.
+ * @property {PropertyMap} properties - Map of node properties.
+ * @property {string} table - Table name.
+ * @property {string} [tenant=''] - Tenant identifier.
+ * @property {string} type - Node type.
  */
 module.exports = function Model(options = {}) {
   var {
@@ -30,6 +33,7 @@ module.exports = function Model(options = {}) {
     history = [],
     maxGSIK,
     node,
+    log = false,
     properties,
     table = process.env.TABLE_NAME,
     tenant = '',
@@ -256,6 +260,14 @@ module.exports = function Model(options = {}) {
         _node = response.Item.Node;
 
         _history.push(response);
+
+        if (log === true) {
+          var now = Date.now();
+          properties = properties.concat([
+            { Type: 'CreatedAt', Data: now },
+            { Type: 'UpdatedAt', Data: now }
+          ]);
+        }
 
         var promises = [];
 
