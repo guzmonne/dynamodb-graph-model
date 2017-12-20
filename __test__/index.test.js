@@ -178,7 +178,7 @@ describe('Model', () => {
       });
     });
 
-    test('should add a CreatedAt and UpdatedAt property if the `log` flag is set to true', () => {
+    test('should set a CreatedAt and UpdatedAt property if the `log` flag is set to true', () => {
       var Test = Model({
         tenant,
         table,
@@ -349,7 +349,7 @@ describe('Model', () => {
     });
   });
 
-  describe('#add()', () => {
+  describe('#set()', () => {
     var node = cuid();
     var tenant = cuid();
     var type = 'Test';
@@ -358,24 +358,24 @@ describe('Model', () => {
     var Test = Model({ tenant, node, table, type, maxGSIK, documentClient });
 
     test('should return a promise', () => {
-      expect(Test.add({ type, data }) instanceof Promise).toBe(true);
+      expect(Test.set({ type, data }) instanceof Promise).toBe(true);
     });
 
     test('should throw an error if node is undefined', () => {
       var Test = Model({ tenant, type, table, maxGSIK, documentClient });
-      expect(() => Test.add()).toThrow('Node is undefined');
+      expect(() => Test.set()).toThrow('Node is undefined');
     });
 
     test('should throw an error if type is undfined', () => {
-      expect(() => Test.add({ data })).toThrow('Type is undefined');
+      expect(() => Test.set({ data })).toThrow('Type is undefined');
     });
 
     test('should throw an error if data is undfined', () => {
-      expect(() => Test.add({ type })).toThrow('Data is undefined');
+      expect(() => Test.set({ type })).toThrow('Data is undefined');
     });
 
     test('should create the new property on the node', () => {
-      return Test.add({ type, data }).then(result => {
+      return Test.set({ type, data }).then(result => {
         expect(result.history[0]).toEqual({
           TableName: table,
           Item: {
@@ -406,7 +406,7 @@ describe('Model', () => {
         documentClient: _documentClient
       });
 
-      return Test.add({ type, data }).then(result => {
+      return Test.set({ type, data }).then(result => {
         expect(Test.maxGSIK).toEqual(maxGSIK);
         expect(result.history[1]).toEqual({
           TableName: table,

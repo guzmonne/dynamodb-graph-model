@@ -61,7 +61,7 @@ module.exports = function Model(options = {}) {
 
   /** Return */
   var publicAPI = {
-    add,
+    set,
     create,
     connect,
     collection,
@@ -155,7 +155,7 @@ module.exports = function Model(options = {}) {
    * @property {string} type - Connection type.
    * @return {Promise} Next model with the resulting data.
    */
-  function add(config = {}) {
+  function set(config = {}) {
     var { type, data } = config;
     var track = createTracker();
     var start = Promise.resolve();
