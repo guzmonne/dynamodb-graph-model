@@ -1,7 +1,5 @@
 'use strict';
 
-var cuid = require('cuid');
-
 /**
  * Takes in a document object, and updates the properties and edges
  * on the DynamoDB Graph table. Then it returns the created object as another
