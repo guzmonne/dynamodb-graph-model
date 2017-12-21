@@ -32,7 +32,11 @@ describe('Model', () => {
   });
 
   var documentClient = {
-    put: params => ({ promise: () => Promise.resolve(params) }),
+    put: params => ({
+      promise: () => {
+        return Promise.resolve(params);
+      }
+    }),
     batchWrite: params => ({ promise: () => Promise.resolve(params) }),
     query: params => ({
       promise: () => {

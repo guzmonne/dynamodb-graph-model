@@ -328,6 +328,8 @@ module.exports = function Model(options = {}) {
                   })
                   .then(result => {
                     track(result);
+                    if (!result || !result.Item || !result.Item.Data)
+                      throw new Error('Data is undefined');
                     edge.Data = result.Item.Data;
                     return newModel({
                       edges: edges.concat(result.Item),
