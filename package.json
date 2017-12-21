@@ -7,7 +7,7 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "test": "jest --watch --findRelatedTests ./__test__/*.test.js"
+    "test": "jest --watch"
   },
   "dependencies": {
     "aws-sdk": "^2.171.0",
