@@ -3,9 +3,9 @@
 var cuid = require('cuid');
 
 /**
- * Takes in a document object, and creates the node, properties, and edges
- * on the DynamoDB Graph table. Then it returns the created object as a doc
- * back to the client.
+ * Takes in a document object, and updates the properties and edges
+ * on the DynamoDB Graph table. Then it returns the created object as another
+ * document back to the client.
  * For it to work, the model must first be configured with the table,
  * DynamoDB Document Client object, and maxGSIK value.
  *
