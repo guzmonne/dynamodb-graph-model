@@ -314,19 +314,34 @@ module.exports = function Model(options = {}) {
               })
           );
 
-        if (edges.length > 0)
+        if (edges.length > 0) {
           promises.push(
-            db
-              .createEdges({
-                tenant,
-                node: _node,
-                maxGSIK,
-                edges
-              })
-              .then(response => {
-                track(response);
-              })
+            Promise.all(
+              edges.map(edge =>
+                db
+                  .createEdge({
+                    tenant,
+                    type: edge.Type,
+                    node: _node,
+                    target: edge.Target,
+                    maxGSIK
+                  })
+                  .then(result => {
+                    track(result);
+                    edge.Data = result.Item.Data;
+                    return newModel({
+                      edges: edges.concat(result.Item),
+                      history: track.dump()
+                    });
+                  })
+                  .catch(error => {
+                    track(error);
+                    throw error;
+                  })
+              )
+            )
           );
+        }
 
         return promises.length > 0 && Promise.all(promises);
       })
@@ -434,7 +449,7 @@ module.exports = function Model(options = {}) {
  * Edge object to attach on a node.
  * @typedef {Object} Edge
  * @property {string} type - Edge type.
- * @property {string} target - Target node.
+ * @property {string|Model} target - Target node.
  * @property {any} data - Edge data.
  *
  * Property object to attach on a node.

@@ -34,7 +34,17 @@ describe('Model', () => {
   var documentClient = {
     put: params => ({ promise: () => Promise.resolve(params) }),
     batchWrite: params => ({ promise: () => Promise.resolve(params) }),
-    query: params => ({ promise: () => Promise.resolve(params) }),
+    query: params => ({
+      promise: () => {
+        return Promise.resolve({
+          Items: [
+            {
+              Data: JSON.stringify('Example')
+            }
+          ]
+        });
+      }
+    }),
     delete: params => ({ promise: () => Promise.resolve(params) })
   };
   var maxGSIK = 0;
@@ -124,13 +134,19 @@ describe('Model', () => {
     var targets = range(0, 3).map(() => cuid());
     var edges = range(0, 3).map(i => ({
       Type: `Edge ${i}`,
-      Data: `Data ${i}`,
       Target: targets[i]
     }));
 
     test('should create the edges on the correct node', () => {
       return Test.create({ data, edges }).then(result => {
         var node = result.node;
+        expect(result.edges).toEqual(
+          range(0, 3).map(i => ({
+            Target: targets[i],
+            Type: `Edge ${i}`,
+            Data: '"Example"'
+          }))
+        );
         expect(result.history[0]).toEqual({
           TableName: table,
           Item: {
@@ -142,20 +158,17 @@ describe('Model', () => {
             MaxGSIK: 0
           }
         });
-        expect(result.history[1]).toEqual({
-          RequestItems: {
-            TestTable: range(0, 3).map(i => ({
-              PutRequest: {
-                Item: {
-                  Data: JSON.stringify(`Data ${i}`),
-                  Node: node,
-                  Target: targets[i],
-                  Type: `Edge ${i}`,
-                  GSIK: node + '#0'
-                }
-              }
-            }))
-          }
+        range(0, 3).forEach(i => {
+          expect(result.history[i + 1]).toEqual({
+            Item: {
+              Data: '"Example"',
+              GSIK: node + '#0',
+              Node: node,
+              Target: targets[i],
+              Type: `Edge ${i}`
+            },
+            TableName: 'TestTable'
+          });
         });
       });
     });
