@@ -41,6 +41,7 @@ var cuid = require('cuid');
  *  .then(result => {
  *    console.log(result);
  *    // {
+ *    //    'id': 'cuix...',
  *    //    'Name': 'Elantris',
  *    //    'Genre': 'Fantasy'
  *    //    'Author': 'cxui..',
@@ -54,6 +55,7 @@ var cuid = require('cuid');
  *    //    }]
  *    // }
  *  })
+ *
  * @param {object} options - Function configuration options.
  * @property {DynamoDBGraphDriver} db - DynamoDB Graph driver.
  * @property {edges[]} [edges] - List of strings that represent edges.

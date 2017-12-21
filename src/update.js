@@ -31,29 +31,28 @@ var cuid = require('cuid');
  *
  * Book.create({
  *  Name: 'Elantris',
- *  Genre: 'Fantasy',
- *  Author: author,
- *  Likes: [
- *    User1,
- *    User2
- *  ]
  * })
  *  .then(result => {
  *    console.log(result);
  *    // {
+ *    //    'id': 'cuix...'
+ *    //    'Name': 'Elantris',
+ *    // }
+ *    result.Genre = 'Fantasy';
+ *    result.Author = 'cuiv...';
+ *    return Book.update(result);
+ *  })
+ *  .then((result) => {
+ *    console.log(result);
+ *    // {
+ *    //    'id': 'cuix...',
  *    //    'Name': 'Elantris',
  *    //    'Genre': 'Fantasy'
- *    //    'Author': 'cxui..',
+ *    //    'Author': 'cuiv..',
  *    //    '@Author': 'Brandon Sanderson',
- *    //    'Likes': [{
- *    //      'User': 'cxuv...',
- *    //      '@User': 'Bob'
- *    //    }, {
- *    //      'User': 'cxud...',
- *    //      '@User': 'Alice'
- *    //    }]
  *    // }
  *  })
+ *
  * @param {object} options - Function configuration options.
  * @property {DynamoDBGraphDriver} db - DynamoDB Graph driver.
  * @property {edges[]} [edges] - List of strings that represent edges.
