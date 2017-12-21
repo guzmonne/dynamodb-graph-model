@@ -300,7 +300,7 @@ module.exports = function Model(options = {}) {
 
         var promises = [];
 
-        if (properties.length > 1)
+        if (properties.length > 0)
           promises.push(
             db
               .createProperties({
@@ -314,7 +314,7 @@ module.exports = function Model(options = {}) {
               })
           );
 
-        if (edges.length > 1)
+        if (edges.length > 0)
           promises.push(
             db
               .createEdges({
