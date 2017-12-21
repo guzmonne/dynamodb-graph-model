@@ -8,11 +8,7 @@ var cuid = require('cuid');
  * back to the client.
  * For it to work, the model must first be configured with the table,
  * DynamoDB Document Client object, and maxGSIK value.
- * @param {object} doc
- * @property {string|number} <key> - It must include the configures key value.
- * @property {any} <properties> - Any of the defined properties.
- * @property {string|number|lists} <edges> - Any of the defined edges.
- * @return {Promise} Promise that resolves into the newly created Doc.
+ *
  * Ex.
  * Model.config({
  *  table: process.env.TABLE_NAME,
@@ -58,6 +54,21 @@ var cuid = require('cuid');
  *    //    }]
  *    // }
  *  })
+ * @param {object} options - Function configuration options.
+ * @property {DynamoDBGraphDriver} db - DynamoDB Graph driver.
+ * @property {edges[]} [edges] - List of strings that represent edges.
+ * @property {string} key - Node data key name.
+ * @property {number} maxGSIK - Maximum GSIK partitions.
+ * @property {property[]} [properties] - List of strings that represent
+ *                                       properties.
+ * @property {string} [tenant] - Current tenant ID.
+ * @property {string} type - Node type.
+ * @return {function} Configured create function.
+ * @param {object} doc - JavaScript object cotainging the node, properties, and
+ *                       edges to create as a map. The only mandatory key is
+ *                       the one that indicates the value of the main node,
+ *                       accesed through the <key> value.
+ * @return {Promise} Promise that resolves into the newly created Doc.
  */
 module.exports = function create(options) {
   var { db, tenant, type, key, maxGSIK, properties = [], edges = [] } = options;
@@ -146,29 +157,3 @@ module.exports = function create(options) {
       });
   };
 };
-
-/**
- * EdgeItem configuration object.
- * @typedef {Object} PropertyItemConfig
- * @property {string} tenant='' - Identifier of the current tenant.
- * @property {string} type - Node type.
- * @property {any}    data - Main data of the node. Will be encoded so it
- *                           maintains its type even though it is stored as
- *                           a string.
- * @property {string} node - Existing node reference. Will be created if it
- *                           is not provided.
- * @property {number} [maxGSIK=4] - Maximum GSIK value to add on the node.
- */
-
-/*
- * NodeItem configuration object.
- * @typedef {Object} NodeItemConfig
- * @property {string} tenant='' - Identifier of the current tenant.
- * @property {string} type - Node type.
- * @property {any}    data - Main data of the node. Will be encoded so it
- *                           maintains its type even though it is stored as
- *                           a string.
- * @property {string} [node] - Existing node reference. Will be created if it
- *                             is not provided.
- * @property {number} [maxGSIK=4] - Maximum GSIK value to add on the node.
- */
