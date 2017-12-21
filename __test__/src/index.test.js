@@ -32,10 +32,22 @@ describe('Model', () => {
     );
   });
 
+  test('should fail if key is undefined', () => {
+    expect(() =>
+      Model({ table: 'Something', documentClient: 'Else', maxGSIK: 4 })
+    ).toThrow('Key is undefined');
+  });
+
   test('should return an object', () => {
     expect(
       isObject(
-        Model({ table: 'something', documentClient: 'else', maxGSIK: 4 })
+        Model({
+          table: 'something',
+          documentClient: 'else',
+          maxGSIK: 4,
+          type: 'Test',
+          key: 'Example'
+        })
       )
     ).toBe(true);
   });
