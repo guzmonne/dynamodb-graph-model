@@ -78,7 +78,7 @@ module.exports = function create(options) {
   return doc => {
     var node = doc.id;
 
-    if (node === undefined) throw new Error('Node is undefined');
+    if (node === undefined) throw new Error('Id is undefined');
 
     var promises = [Promise.resolve()];
 

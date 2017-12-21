@@ -86,6 +86,10 @@ describe('update()', () => {
     edges
   });
 
+  test('should throw if id is undefined', () => {
+    expect(() => update$({ [key]: 'Something' })).toThrow('Id is undefined');
+  });
+
   test('should return a promise', () => {
     expect(update$({ id: node, [key]: 'Something' }) instanceof Promise).toBe(
       true
