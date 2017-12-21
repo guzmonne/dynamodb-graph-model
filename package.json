@@ -1,6 +1,6 @@
 {
   "name": "dynamodb-graph-model",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "repository": {
     "github": "git@github.com:guzmonne/dynamodb-graph-model.git"
   },
