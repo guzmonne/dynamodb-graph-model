@@ -1,7 +1,7 @@
 'use strict';
 
 var isObject = require('lodash/isObject');
-var Model = require('../../src/index.js');
+var Model = require('../../src/Model.js');
 
 describe('Model', () => {
   afterEach(() => {
@@ -75,6 +75,26 @@ describe('Model', () => {
       var result = Model.config({ table: 'Something', foo: 'bar' });
       expect(result.table).toEqual('Something');
       expect(result.foo).not.toEqual('bar');
+    });
+  });
+
+  var TestModel = Model({
+    table: 'something',
+    documentClient: 'else',
+    maxGSIK: 4,
+    type: 'Test',
+    key: 'Example'
+  });
+
+  describe('#create()', () => {
+    test('should be a function', () => {
+      expect(typeof TestModel.create).toEqual('function');
+    });
+  });
+
+  describe('#update()', () => {
+    test('should be a function', () => {
+      expect(typeof TestModel.update).toEqual('function');
     });
   });
 });

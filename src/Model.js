@@ -3,6 +3,7 @@
 var pick = require('lodash/pick');
 var isObject = require('lodash/isObject.js');
 var create = require('./create.js');
+var update = require('./update.js');
 
 var optionKeys = ['db', 'maxGSIK', 'tenant', 'documentClient', 'table', 'key'];
 
@@ -34,7 +35,8 @@ function Model(options = {}) {
     }));
 
   return Object.freeze({
-    create: create(options)
+    create: create(options),
+    update: update(options)
   });
 }
 
