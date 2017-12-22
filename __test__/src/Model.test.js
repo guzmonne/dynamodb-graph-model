@@ -97,4 +97,10 @@ describe('Model', () => {
       expect(typeof TestModel.update).toEqual('function');
     });
   });
+
+  describe('#destroy()', () => {
+    test('should be a function', () => {
+      expect(typeof TestModel.destroy).toEqual('function');
+    });
+  });
 });
