@@ -34,8 +34,8 @@ var cuid = require('cuid');
  *  Genre: 'Fantasy',
  *  Author: author,
  *  Likes: [
- *    User1,
- *    User2
+ *    'cu12..', // User 1 Id.
+ *    'cu13..', // User 2 Id.
  *  ]
  * })
  *  .then(result => {
@@ -46,13 +46,12 @@ var cuid = require('cuid');
  *    //    'Genre': 'Fantasy'
  *    //    'Author': 'cxui..',
  *    //    '@Author': 'Brandon Sanderson',
- *    //    'Likes': [{
- *    //      'User': 'cxuv...',
- *    //      '@User': 'Bob'
- *    //    }, {
- *    //      'User': 'cxud...',
- *    //      '@User': 'Alice'
- *    //    }]
+ *    //    'Likes': {
+ *    //      'cxuv...': 'cu12..', // User 1 Id.
+ *    //      '@cxuv...': 'Bob', // User 1 key data.
+ *    //      'cmuv...': 'cu13..', // User 2 Id.
+ *    //      '@cmuv...': 'Alicia', // User 2 key data.
+ *    //    }
  *    // }
  *  })
  *
@@ -95,65 +94,92 @@ module.exports = function create(options) {
         maxGSIK
       })
       .then(result => {
-        var promises = [Promise.resolve()];
-
-        var propMap = properties
-          .filter(property => doc[property] !== undefined)
-          .map(property => ({
-            type: property,
-            data: doc[property]
-          }));
-
-        var edgeMap = edges
-          .filter(edge => doc[edge] !== undefined)
-          .map(edge => ({
-            type: edge,
-            target: doc[edge]
-          }));
-
-        if (propMap.length > 0)
-          propMap.forEach(({ type, data }) =>
-            promises.push(
-              db.createProperty({
-                tenant,
-                type,
-                node,
-                data,
-                maxGSIK
-              })
+        return Promise.all(
+          [
+            Promise.all(
+              properties
+                .filter(property => doc[property] !== undefined)
+                .map(property =>
+                  db.createProperty({
+                    tenant,
+                    type: property,
+                    node,
+                    data: doc[property],
+                    maxGSIK
+                  })
+                )
             )
-          );
-
-        if (edgeMap.length > 0)
-          edgeMap.forEach(edge => {
-            var { type, target } = edge;
-            return promises.push(
-              db
-                .createEdge({
-                  tenant,
-                  type,
-                  node,
-                  target,
-                  maxGSIK
-                })
-                .then(response => (edge.data = response.Item.Data))
-            );
-          });
-
-        return Promise.all(promises).then(result => {
+          ]
+            .concat(
+              Promise.all(
+                edges.filter(edge => doc[edge] !== undefined).map(edge =>
+                  db.createEdge({
+                    tenant,
+                    type: edge,
+                    node,
+                    target: doc[edge],
+                    maxGSIK
+                  })
+                )
+              )
+            )
+            .concat(
+              Promise.all(
+                edges
+                  .filter(edge => edge.indexOf(['[]']) > -1)
+                  .map(edge => edge.replace('[]', ''))
+                  .filter(edge => doc[edge] !== undefined)
+                  .map(edge =>
+                    Promise.all(
+                      doc[edge].map(target =>
+                        db.createEdge({
+                          tenant,
+                          type: `${edge}#${cuid()}`,
+                          node,
+                          target: target,
+                          maxGSIK
+                        })
+                      )
+                    )
+                  )
+              )
+            )
+        ).then(results => {
+          var [propertiesResults, edgesResults, edgeListResults] = results;
           return Object.assign(
             {
               id: node,
               [key]: data
             },
-            doc,
-            edgeMap.reduce(
-              (acc, edge) =>
-                Object.assign({}, acc, {
-                  [`@${edge.type}`]: edge.data
+            propertiesResults.reduce(
+              (acc, result) =>
+                Object.assign(acc, {
+                  [result.Item.Type]: result.Item.Data
                 }),
               {}
-            )
+            ),
+            edgesResults.reduce(
+              (acc, result) =>
+                Object.assign(acc, {
+                  [result.Item.Type]: result.Item.Target,
+                  [`@${result.Item.Type}`]: result.Item.Data
+                }),
+              {}
+            ),
+            edgeListResults
+              .map(results => {
+                var type = results[0].Item.Type.split('#')[0];
+                return {
+                  [type]: results.reduce((acc, result) => {
+                    let id = result.Item.Type.split('#')[1];
+                    return Object.assign(acc, {
+                      [id]: result.Item.Target,
+                      [`@${id}`]: result.Item.Data
+                    });
+                  }, {})
+                };
+              })
+              .reduce((acc, results) => Object.assign(acc, results), {})
           );
         });
       });

@@ -21,7 +21,7 @@ var db = {
       Item: {
         Node: params.node,
         Type: params.type,
-        Data: JSON.stringify(params.data),
+        Data: params.data,
         GSIK: params.node + '#1'
       }
     });
@@ -85,7 +85,7 @@ describe('create()', () => {
   });
 
   var properties = ['One', 'Two', 'Three'];
-  var edges = ['Edge1', 'Edge2'];
+  var edges = ['Edge1', 'Edge2', 'EdgeList[]', 'EdgeList2[]'];
   var edge1 = cuid();
   var edge2 = cuid();
   var create$ = create({ db, tenant, type, key, maxGSIK, properties, edges });
@@ -119,19 +119,45 @@ describe('create()', () => {
   });
 
   test('should create te node and all its edges', () => {
-    return create$({ [key]: 'Something', Edge1: edge1, Edge2: edge2 }).then(
-      doc => {
-        var node = doc.id;
-        expect(db.createEdge.calledTwice).toBe(true);
-        expect(doc).toEqual({
-          id: node,
-          [key]: 'Something',
-          Edge1: edge1,
-          '@Edge1': 'Cool',
-          Edge2: edge2,
-          '@Edge2': 'Cool'
-        });
-      }
-    );
+    var edgeListA = cuid();
+    var edgeListB = cuid();
+    var edgeList2A = cuid();
+    var edgeList2B = cuid();
+    return create$({
+      [key]: 'Something',
+      Edge1: edge1,
+      Edge2: edge2,
+      EdgeList: [edgeListA, edgeListB],
+      EdgeList2: [edgeList2A, edgeList2B]
+    }).then(doc => {
+      var node = doc.id;
+      expect(db.createEdge.callCount).toBe(6);
+      var edgeListIds = Object.keys(doc.EdgeList).filter(
+        key => key.indexOf('@') === -1
+      );
+      var edgeList2Ids = Object.keys(doc.EdgeList2).filter(
+        key => key.indexOf('@') === -1
+      );
+      expect(doc).toEqual({
+        id: node,
+        [key]: 'Something',
+        Edge1: edge1,
+        '@Edge1': 'Cool',
+        Edge2: edge2,
+        '@Edge2': 'Cool',
+        EdgeList: {
+          [edgeListIds[0]]: edgeListA,
+          [`@${edgeListIds[0]}`]: 'Cool',
+          [edgeListIds[1]]: edgeListB,
+          [`@${edgeListIds[1]}`]: 'Cool'
+        },
+        EdgeList2: {
+          [edgeList2Ids[0]]: edgeList2A,
+          [`@${edgeList2Ids[0]}`]: 'Cool',
+          [edgeList2Ids[1]]: edgeList2B,
+          [`@${edgeList2Ids[1]}`]: 'Cool'
+        }
+      });
+    });
   });
 });
