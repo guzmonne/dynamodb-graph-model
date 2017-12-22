@@ -118,7 +118,7 @@ describe('create()', () => {
     );
   });
 
-  test('should create te node and all its edges', () => {
+  test('should create the node and all its edges', () => {
     var edgeListA = cuid();
     var edgeListB = cuid();
     var edgeList2A = cuid();

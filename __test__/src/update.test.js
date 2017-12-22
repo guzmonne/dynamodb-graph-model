@@ -10,7 +10,7 @@ var db = {
       Item: {
         Node: params.node,
         Type: params.type,
-        Data: JSON.stringify(params.data),
+        Data: params.data,
         GSIK: params.node + '#1'
       }
     });
@@ -54,18 +54,6 @@ describe('update()', () => {
     );
   });
 
-  test('should throw if the type is undefined', () => {
-    expect(() => update({ db, tenant, key, maxGSIK })).toThrow(
-      'Type is undefined'
-    );
-  });
-
-  test('should throw if the key is undefined', () => {
-    expect(() => update({ db, tenant, type, maxGSIK })).toThrow(
-      'Key is undefined'
-    );
-  });
-
   test('should return a function', () => {
     expect(typeof update({ db, tenant, type, key, maxGSIK })).toEqual(
       'function'
@@ -73,7 +61,7 @@ describe('update()', () => {
   });
 
   var properties = ['One', 'Two', 'Three'];
-  var edges = ['Edge1', 'Edge2'];
+  var edges = ['Edge1', 'Edge2', 'EdgeList[]', 'EdgeList2[]'];
   var edge1 = cuid();
   var edge2 = cuid();
   var update$ = update({
@@ -99,16 +87,23 @@ describe('update()', () => {
   test('should update all its properties', () => {
     return update$({
       id: node,
-      [key]: 'Something',
       One: 2,
       Two: 3,
       Three: 4
     }).then(doc => {
       var node = doc.id;
       expect(db.createProperty.calledThrice).toBe(true);
+      expect(
+        db.createProperty.calledWith({
+          tenant,
+          type: 'One',
+          node,
+          data: 2,
+          maxGSIK: 0
+        })
+      ).toBe(true);
       expect(doc).toEqual({
         id: node,
-        [key]: 'Something',
         One: 2,
         Two: 3,
         Three: 4
@@ -119,19 +114,68 @@ describe('update()', () => {
   test('should update all its edges', () => {
     return update$({
       id: node,
-      [key]: 'Something',
       Edge1: edge1,
       Edge2: edge2
     }).then(doc => {
       var node = doc.id;
       expect(db.createEdge.calledTwice).toBe(true);
+      expect(
+        db.createEdge.calledWith({
+          tenant,
+          type: 'Edge1',
+          node,
+          target: edge1,
+          maxGSIK: 0
+        })
+      ).toBe(true);
       expect(doc).toEqual({
         id: node,
-        [key]: 'Something',
         Edge1: edge1,
         '@Edge1': 'Cool',
         Edge2: edge2,
         '@Edge2': 'Cool'
+      });
+    });
+  });
+
+  test('should update all its edges', () => {
+    var edgeListA = cuid();
+    var edgeListB = cuid();
+    var edgeList2A = cuid();
+    var edgeList2B = cuid();
+    return update$({
+      id: node,
+      Edge1: edge1,
+      Edge2: edge2,
+      EdgeList: [edgeListA, edgeListB],
+      EdgeList2: [edgeList2A, edgeList2B]
+    }).then(doc => {
+      var node = doc.id;
+      var edgeListIds = Object.keys(doc.EdgeList).filter(
+        key => key.indexOf('@') === -1
+      );
+      var edgeList2Ids = Object.keys(doc.EdgeList2).filter(
+        key => key.indexOf('@') === -1
+      );
+      expect(db.createEdge.callCount).toBe(6);
+      expect(doc).toEqual({
+        id: node,
+        Edge1: edge1,
+        '@Edge1': 'Cool',
+        Edge2: edge2,
+        '@Edge2': 'Cool',
+        EdgeList: {
+          [edgeListIds[0]]: edgeListA,
+          [`@${edgeListIds[0]}`]: 'Cool',
+          [edgeListIds[1]]: edgeListB,
+          [`@${edgeListIds[1]}`]: 'Cool'
+        },
+        EdgeList2: {
+          [edgeList2Ids[0]]: edgeList2A,
+          [`@${edgeList2Ids[0]}`]: 'Cool',
+          [edgeList2Ids[1]]: edgeList2B,
+          [`@${edgeList2Ids[1]}`]: 'Cool'
+        }
       });
     });
   });

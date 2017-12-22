@@ -93,7 +93,7 @@ module.exports = function create(options) {
         data,
         maxGSIK
       })
-      .then(result => {
+      .then(() => {
         return Promise.all(
           [
             Promise.all(
