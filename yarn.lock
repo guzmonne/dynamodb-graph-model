@@ -551,6 +551,13 @@ cssom@0.3.x, "cssom@>= 0.3.2 < 0.4.0":
   dependencies:
     cssom "0.3.x"
 
+csvtojson@^1.1.9:
+  version "1.1.9"
+  resolved "https://registry.yarnpkg.com/csvtojson/-/csvtojson-1.1.9.tgz#e641ae72f7bc2fa3f9aaf127e021fc89447c1cd1"
+  dependencies:
+    lodash "^4.17.3"
+    strip-bom "1.0.0"
+
 cuid@^1.3.8:
   version "1.3.8"
   resolved "https://registry.yarnpkg.com/cuid/-/cuid-1.3.8.tgz#4b875e0969bad764f7ec0706cf44f5fb0831f6b7"
@@ -617,9 +624,9 @@ diff@^3.1.0, diff@^3.2.0:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.4.0.tgz#b1d85507daf3964828de54b37d0d73ba67dda56c"
 
-dynamodb-graph@^1.6.3:
-  version "1.6.3"
-  resolved "https://registry.yarnpkg.com/dynamodb-graph/-/dynamodb-graph-1.6.3.tgz#78a16603bdb3fb7288364619cc182768cb46ab6d"
+dynamodb-graph@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/dynamodb-graph/-/dynamodb-graph-1.7.0.tgz#7a7321709d1d0f0ed090fa9344d810a4bd742676"
   dependencies:
     aws-sdk "^2.169.0"
     cuid "^1.3.8"
@@ -785,6 +792,10 @@ find-up@^2.0.0, find-up@^2.1.0:
   resolved "https://registry.yarnpkg.com/find-up/-/find-up-2.1.0.tgz#45d1b7e506c717ddd482775a2b77920a3c0c57a7"
   dependencies:
     locate-path "^2.0.0"
+
+first-chunk-stream@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/first-chunk-stream/-/first-chunk-stream-1.0.0.tgz#59bfb50cd905f60d7c394cd3d9acaab4e6ad934e"
 
 for-in@^1.0.1:
   version "1.0.2"
@@ -1610,7 +1621,7 @@ lodash.get@^4.4.2:
   version "4.4.2"
   resolved "https://registry.yarnpkg.com/lodash.get/-/lodash.get-4.4.2.tgz#2d177f652fa31e939b4438d5341499dfa3825e99"
 
-lodash@^4.0.0, lodash@^4.14.0, lodash@^4.17.4:
+lodash@^4.0.0, lodash@^4.14.0, lodash@^4.17.3, lodash@^4.17.4:
   version "4.17.4"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.4.tgz#78203a4d1c328ae1d86dca6460e369b57f4055ae"
 
@@ -2366,6 +2377,13 @@ strip-ansi@^4.0.0:
   resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-4.0.0.tgz#a8479022eb1ac368a871389b635262c505ee368f"
   dependencies:
     ansi-regex "^3.0.0"
+
+strip-bom@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/strip-bom/-/strip-bom-1.0.0.tgz#85b8862f3844b5a6d5ec8467a93598173a36f794"
+  dependencies:
+    first-chunk-stream "^1.0.0"
+    is-utf8 "^0.2.0"
 
 strip-bom@3.0.0, strip-bom@^3.0.0:
   version "3.0.0"

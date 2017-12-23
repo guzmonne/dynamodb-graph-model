@@ -56,3 +56,9 @@ typings/
 
 # dotenv environment variables file
 .env
+
+# Data logs
+scripts/the-simpsons-by-the-data/*
+
+# DS_Store
+.DS_Store
