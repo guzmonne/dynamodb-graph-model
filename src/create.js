@@ -1,6 +1,7 @@
 'use strict';
 
 var cuid = require('cuid');
+var update = require('./update.js');
 
 /**
  * Takes in a document object, and creates the node, properties, and edges
@@ -79,6 +80,8 @@ module.exports = function create(options) {
   if (key === undefined) throw new Error('Key is undefined');
   if (maxGSIK === undefined) throw new Error('Max GSIK is undefined');
 
+  var update$ = update(options);
+
   return doc => {
     var data = doc[key];
     var node = cuid();
@@ -93,89 +96,22 @@ module.exports = function create(options) {
         data,
         maxGSIK
       })
-      .then(() => {
-        return Promise.all([
-          Promise.all(
-            properties
-              .filter(property => doc[property] !== undefined)
-              .map(property =>
-                db.createProperty({
-                  tenant,
-                  type: property,
-                  node,
-                  data: doc[property],
-                  maxGSIK
-                })
-              )
-          ),
-          Promise.all(
-            edges.filter(edge => doc[edge] !== undefined).map(edge =>
-              db.createEdge({
-                tenant,
-                type: edge,
-                node,
-                target: doc[edge],
-                maxGSIK
-              })
-            )
-          ),
-          Promise.all(
-            edges
-              .filter(edge => edge.indexOf(['[]']) > -1)
-              .map(edge => edge.replace('[]', ''))
-              .filter(edge => doc[edge] !== undefined)
-              .map(edge =>
-                Promise.all(
-                  doc[edge].map(target =>
-                    db.createEdge({
-                      tenant,
-                      type: `${edge}#${cuid()}`,
-                      node,
-                      target: target,
-                      maxGSIK
-                    })
-                  )
-                )
-              )
-          )
-        ]).then(results => {
-          var [propertiesResults, edgesResults, edgeListResults] = results;
-          return Object.assign(
+      .then(() =>
+        update$(
+          Object.assign(
             {
-              id: node,
+              id: node
+            },
+            doc
+          )
+        ).then(doc =>
+          Object.assign(
+            {
               [key]: data
             },
-            propertiesResults.reduce(
-              (acc, result) =>
-                Object.assign(acc, {
-                  [result.Item.Type]: result.Item.Data
-                }),
-              {}
-            ),
-            edgesResults.reduce(
-              (acc, result) =>
-                Object.assign(acc, {
-                  [result.Item.Type]: result.Item.Target,
-                  [`@${result.Item.Type}`]: result.Item.Data
-                }),
-              {}
-            ),
-            edgeListResults
-              .map(results => {
-                var type = results[0].Item.Type.split('#')[0];
-                return {
-                  [type]: results.reduce((acc, result) => {
-                    let id = result.Item.Type.split('#')[1];
-                    return Object.assign(acc, {
-                      [id]: result.Item.Target,
-                      [`@${id}`]: result.Item.Data
-                    });
-                  }, {})
-                };
-              })
-              .reduce((acc, results) => Object.assign(acc, results), {})
-          );
-        });
-      });
+            doc
+          )
+        )
+      );
   };
 };
