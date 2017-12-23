@@ -84,6 +84,19 @@ describe('create()', () => {
     );
   });
 
+  test('should fail is `doc` is not an object', () => {
+    expect(() => create({ db, tenant, type, key, maxGSIK })(1)).toThrow(
+      'Doc is not an object'
+    );
+  });
+
+  test('should append the tenant id if defined', () => {
+    var tenant = '111';
+    return create({ db, tenant, type, key, maxGSIK })({
+      [key]: 'Something'
+    }).then(doc => expect(doc.id.indexOf(tenant + '#')).toEqual(0));
+  });
+
   var properties = ['One', 'Two', 'Three'];
   var edges = ['Edge1', 'Edge2', 'EdgeList[]', 'EdgeList2[]'];
   var edge1 = cuid();
