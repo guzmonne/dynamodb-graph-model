@@ -5,6 +5,7 @@ var isObject = require('lodash/isObject.js');
 var create = require('./create.js');
 var update = require('./update.js');
 var destroy = require('./destroy.js');
+var get = require('./get.js');
 
 var optionKeys = ['db', 'maxGSIK', 'tenant', 'documentClient', 'table', 'key'];
 
@@ -38,7 +39,8 @@ function Model(options = {}) {
   return Object.freeze({
     create: create(options),
     update: update(options),
-    destroy: destroy(options)
+    destroy: destroy(options),
+    get: get(options)
   });
 }
 
