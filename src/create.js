@@ -25,7 +25,7 @@ var cuid = require('cuid');
  *  ],
  *  edges: [
  *    'Author',
- *    'Likes[]'
+ *    'Fans[]'
  *  ]
  * });
  *
@@ -33,7 +33,7 @@ var cuid = require('cuid');
  *  Name: 'Elantris',
  *  Genre: 'Fantasy',
  *  Author: author,
- *  Likes: [
+ *  Fans: [
  *    'cu12..', // User 1 Id.
  *    'cu13..', // User 2 Id.
  *  ]
@@ -46,10 +46,10 @@ var cuid = require('cuid');
  *    //    'Genre': 'Fantasy'
  *    //    'Author': 'cxui..',
  *    //    '@Author': 'Brandon Sanderson',
- *    //    'Likes': {
- *    //      'cxuv...': 'cu12..', // User 1 Id.
- *    //      '@cxuv...': 'Bob', // User 1 key data.
- *    //      'cmuv...': 'cu13..', // User 2 Id.
+ *    //    'Fans': {
+ *    //      'cxuv...': 'cu12..',  // User 1 Id.
+ *    //      '@cxuv...': 'Bob',    // User 1 key data.
+ *    //      'cmuv...': 'cu13..',  // User 2 Id.
  *    //      '@cmuv...': 'Alicia', // User 2 key data.
  *    //    }
  *    // }
@@ -94,57 +94,51 @@ module.exports = function create(options) {
         maxGSIK
       })
       .then(() => {
-        return Promise.all(
-          [
-            Promise.all(
-              properties
-                .filter(property => doc[property] !== undefined)
-                .map(property =>
-                  db.createProperty({
-                    tenant,
-                    type: property,
-                    node,
-                    data: doc[property],
-                    maxGSIK
-                  })
-                )
-            )
-          ]
-            .concat(
-              Promise.all(
-                edges.filter(edge => doc[edge] !== undefined).map(edge =>
-                  db.createEdge({
-                    tenant,
-                    type: edge,
-                    node,
-                    target: doc[edge],
-                    maxGSIK
-                  })
-                )
+        return Promise.all([
+          Promise.all(
+            properties
+              .filter(property => doc[property] !== undefined)
+              .map(property =>
+                db.createProperty({
+                  tenant,
+                  type: property,
+                  node,
+                  data: doc[property],
+                  maxGSIK
+                })
               )
+          ),
+          Promise.all(
+            edges.filter(edge => doc[edge] !== undefined).map(edge =>
+              db.createEdge({
+                tenant,
+                type: edge,
+                node,
+                target: doc[edge],
+                maxGSIK
+              })
             )
-            .concat(
-              Promise.all(
-                edges
-                  .filter(edge => edge.indexOf(['[]']) > -1)
-                  .map(edge => edge.replace('[]', ''))
-                  .filter(edge => doc[edge] !== undefined)
-                  .map(edge =>
-                    Promise.all(
-                      doc[edge].map(target =>
-                        db.createEdge({
-                          tenant,
-                          type: `${edge}#${cuid()}`,
-                          node,
-                          target: target,
-                          maxGSIK
-                        })
-                      )
-                    )
+          ),
+          Promise.all(
+            edges
+              .filter(edge => edge.indexOf(['[]']) > -1)
+              .map(edge => edge.replace('[]', ''))
+              .filter(edge => doc[edge] !== undefined)
+              .map(edge =>
+                Promise.all(
+                  doc[edge].map(target =>
+                    db.createEdge({
+                      tenant,
+                      type: `${edge}#${cuid()}`,
+                      node,
+                      target: target,
+                      maxGSIK
+                    })
                   )
+                )
               )
-            )
-        ).then(results => {
+          )
+        ]).then(results => {
           var [propertiesResults, edgesResults, edgeListResults] = results;
           return Object.assign(
             {
