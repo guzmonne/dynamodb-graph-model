@@ -258,6 +258,16 @@ I tried to include information on each function as a JSDoc comment. I plan in
 the future to transform it into a proper documentation page. I wish there was
 something like `Sphix` for JavaScript.
 
+## Playground
+
+To test the model in action, I set up a simple playground. On the `scripts`
+folder you'll find some scripts to easily set everything up. I might also add
+a docker version in the future.
+
+As test data, I am using this [Simpsons Kaggle data](https://www.kaggle.com/wcukierski/the-simpsons-by-the-data). You should
+downloaded from the link, and added into the database. It should be as easy as
+copy the dump on the `scripts` folder and then run the necessary scripts.
+
 ## Test
 
 I am using `jest` to test the library. So, just clone the repo, install the
