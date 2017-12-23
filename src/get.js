@@ -74,23 +74,100 @@
  * @return {Promise} Promise that resolves into the newly created Doc.
  */
 module.exports = function create(options) {
-  var { db, tenant, type, key, maxGSIK, properties = [], edges = [] } = options;
+  var { db, tenant, type, key, maxGSIK } = options;
 
   if (db === undefined) throw new Error('DB driver is undefined');
   if (type === undefined) throw new Error('Type is undefined');
   if (key === undefined) throw new Error('Key is undefined');
   if (maxGSIK === undefined) throw new Error('Max GSIK is undefined');
 
-  return config => {
-    var node = config.id;
+  return doc => {
+    var { id: node, properties = [], edges = [], edgesList = [] } = doc;
 
-    return Promise.all([db.getNode(node)]).then(results => {
-      //var [propertiesResults, edgesResults, edgeListResults] = results;
-      var [nodeResult] = results;
-      return Object.assign({
-        id: node,
-        [key]: nodeResult.Item.Data
-      });
+    if (doc.properties === '$all') properties = options.properties;
+    if (doc.edges === '$all')
+      edges = options.edges.filter(edge => edge.indexOf('[]') === -1);
+
+    return Promise.all([
+      db.getNode(node),
+      Promise.all(
+        properties
+          .filter(property => options.properties.indexOf(property) > -1)
+          .map(property =>
+            db.getNodeType({
+              node,
+              type: property
+            })
+          )
+      ),
+      Promise.all(
+        edges.filter(edge => options.edges.indexOf(edge) > -1).map(edge =>
+          db.getNodeType({
+            node,
+            type: edge
+          })
+        )
+      ),
+      Promise.all(
+        edgesList
+          .filter(edgeList => options.edges.indexOf(`${edgeList.type}[]`) > -1)
+          .map(edgeList =>
+            db
+              .getNodeTypes({
+                node,
+                limit: typeof edgeList.limit === 'number' ? edgeList.limit : 10,
+                sortKeyCondition: 'begins_with(#Type, :Value)',
+                sortKeyValue:
+                  typeof edgeList.beginsWith === 'string'
+                    ? edgeList.type + '#' + edgeList.beginsWith
+                    : edgeList.type
+              })
+              .then(response => {
+                response.Type = edgeList.type;
+                return response;
+              })
+          )
+      )
+    ]).then(results => {
+      var [
+        nodeResult,
+        propertiesResults,
+        edgesResults,
+        edgeListResults
+      ] = results;
+
+      return Object.assign(
+        {
+          id: node,
+          [key]: nodeResult.Item.Data
+        },
+        propertiesResults.reduce(
+          (acc, result) =>
+            Object.assign(acc, {
+              [result.Item.Type]: result.Item.Data
+            }),
+          {}
+        ),
+        edgesResults.reduce(
+          (acc, result) =>
+            Object.assign(acc, {
+              [result.Item.Type]: result.Item.Target,
+              [`@${result.Item.Type}`]: result.Item.Data
+            }),
+          {}
+        ),
+        edgeListResults.reduce((acc1, result) => {
+          return Object.assign(acc1, {
+            [result.Type]: result.Items.reduce((acc2, item) => {
+              let id = item.Type.split('#')[1];
+              return Object.assign(acc2, {
+                [id]: item.Target,
+                [`@${id}`]: item.Data
+              });
+            }, {})
+          });
+        }, {})
+      );
     });
   };
 };
