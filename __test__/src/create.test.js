@@ -41,7 +41,8 @@ var db = {
 var type = 'Test',
   maxGSIK = 0,
   key = 'ExampleKey',
-  tenant = cuid();
+  tenant = cuid(),
+  nodeGenerator = cuid;
 
 describe('create()', () => {
   beforeEach(() => {
@@ -92,16 +93,45 @@ describe('create()', () => {
 
   test('should append the tenant id if defined', () => {
     var tenant = '111';
-    return create({ db, tenant, type, key, maxGSIK })({
+    return create({ db, tenant, type, key, maxGSIK, nodeGenerator })({
       [key]: 'Something'
     }).then(doc => expect(doc.id.indexOf(tenant + '#')).toEqual(0));
+  });
+
+  test('should allow to set a custom nodeGenerator function', () => {
+    var tenant = '111';
+    var nodeGenerator = () => 'Hola';
+    return create({ db, tenant, type, key, maxGSIK, nodeGenerator })({
+      [key]: 'Something'
+    }).then(doc => expect(doc.id).toEqual('111#Hola'));
+  });
+
+  test('should call the nodeGenerator with the doc', () => {
+    var tenant = '111';
+    var nodeGenerator = sinon.spy();
+    var doc = { [key]: 'Something', foo: 'bar' };
+    return create({ db, tenant, type, key, maxGSIK, nodeGenerator })(doc).then(
+      () => {
+        expect(nodeGenerator.calledOnce).toBe(true);
+        expect(nodeGenerator.calledWith(doc)).toBe(true);
+      }
+    );
   });
 
   var properties = ['One', 'Two', 'Three'];
   var edges = ['Edge1', 'Edge2', 'EdgeList[]', 'EdgeList2[]'];
   var edge1 = cuid();
   var edge2 = cuid();
-  var create$ = create({ db, tenant, type, key, maxGSIK, properties, edges });
+  var create$ = create({
+    db,
+    tenant,
+    type,
+    key,
+    maxGSIK,
+    properties,
+    edges,
+    nodeGenerator
+  });
 
   test('should return a promise', () => {
     expect(create$({ [key]: 'Something' }) instanceof Promise).toBe(true);

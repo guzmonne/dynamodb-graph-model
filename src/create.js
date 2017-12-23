@@ -1,6 +1,5 @@
 'use strict';
 
-var cuid = require('cuid');
 var update = require('./update.js');
 var isObject = require('lodash/isObject');
 
@@ -74,7 +73,16 @@ var isObject = require('lodash/isObject');
  * @return {Promise} Promise that resolves into the newly created Doc.
  */
 module.exports = function create(options) {
-  var { db, tenant, type, key, maxGSIK, properties = [], edges = [] } = options;
+  var {
+    db,
+    tenant,
+    type,
+    key,
+    maxGSIK,
+    properties = [],
+    edges = [],
+    nodeGenerator
+  } = options;
 
   if (db === undefined) throw new Error('DB driver is undefined');
   if (type === undefined) throw new Error('Type is undefined');
@@ -90,7 +98,10 @@ module.exports = function create(options) {
 
     if (data === undefined) throw new Error('Data is undefined');
 
-    doc.id = tenant !== undefined ? tenant + '#' + cuid() : cuid();
+    doc.id =
+      tenant !== undefined
+        ? tenant + '#' + nodeGenerator(doc)
+        : nodeGenerator(doc);
 
     return db
       .createNode({
