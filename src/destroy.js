@@ -12,7 +12,7 @@ var cuid = require('cuid');
  * Model.config({
  *  table: process.env.TABLE_NAME,
  *  documentClient: new AWS.DynamoDB.DocumentClient(),
- *  maxGSIK: 4
+ *  maxGSIK: 10
  * });
  *
  * // Book model configuration.

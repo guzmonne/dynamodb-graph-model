@@ -13,7 +13,7 @@
  * Model.config({
  *  table: process.env.TABLE_NAME,
  *  documentClient: new AWS.DynamoDB.DocumentClient(),
- *  maxGSIK: 4
+ *  maxGSIK: 10
  * });
  *
  * var Book = new Model({
