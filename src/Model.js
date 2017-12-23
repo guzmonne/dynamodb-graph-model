@@ -16,11 +16,13 @@ module.exports = Model;
 // ---
 
 function Model(options = {}) {
+  options = Object.assign({}, defaults, options);
+
   var {
-    table = defaults.table || process.env.TABLE_NAME,
-    documentClient = defaults.documentClient,
-    maxGSIK = defaults.maxGSIK,
-    key = defaults.key
+    table = process.env.TABLE_NAME,
+    documentClient,
+    maxGSIK,
+    key
   } = options;
 
   if (table === undefined) throw new Error('Table is undefined');
