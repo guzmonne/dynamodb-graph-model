@@ -2,6 +2,7 @@
 
 var cuid = require('cuid');
 var update = require('./update.js');
+var isObject = require('lodash/isObject');
 
 /**
  * Takes in a document object, and creates the node, properties, and edges
@@ -83,28 +84,24 @@ module.exports = function create(options) {
   var update$ = update(options);
 
   return doc => {
+    if (isObject(doc) === false) throw new Error('Doc is not an object');
+
     var data = doc[key];
-    var node = cuid();
 
     if (data === undefined) throw new Error('Data is undefined');
 
+    doc.id = tenant !== undefined ? tenant + '#' + cuid() : cuid();
+
     return db
       .createNode({
-        node,
+        node: doc.id,
         tenant,
         type,
         data,
         maxGSIK
       })
       .then(() =>
-        update$(
-          Object.assign(
-            {
-              id: node
-            },
-            doc
-          )
-        ).then(doc =>
+        update$(doc).then(doc =>
           Object.assign(
             {
               [key]: data
