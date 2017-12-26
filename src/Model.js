@@ -1,13 +1,23 @@
 'use strict';
 
+var cuid = require('cuid');
 var pick = require('lodash/pick');
 var isObject = require('lodash/isObject.js');
+var isFunction = require('lodash/isFunction.js');
 var create = require('./create.js');
 var update = require('./update.js');
 var destroy = require('./destroy.js');
 var get = require('./get.js');
 
-var optionKeys = ['db', 'maxGSIK', 'tenant', 'documentClient', 'table', 'key'];
+var optionKeys = [
+  'db',
+  'maxGSIK',
+  'tenant',
+  'documentClient',
+  'table',
+  'key',
+  'nodeGenerator'
+];
 
 var defaults = {};
 
@@ -38,11 +48,15 @@ function Model(options = {}) {
       table: table
     }));
 
+  /** Node Generator setup */
+  isFunction(options.nodeGenerator) || (options.nodeGenerator = cuid);
+
   return Object.freeze({
     create: create(options),
     update: update(options),
     destroy: destroy(options),
-    get: get(options)
+    get: get(options),
+    type: options.type
   });
 }
 
