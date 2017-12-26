@@ -268,6 +268,138 @@ As test data, I am using this [Simpsons Kaggle data](https://www.kaggle.com/wcuk
 downloaded from the link, and added into the database. It should be as easy as
 copy the dump on the `scripts` folder and then run the necessary scripts.
 
+It is composed of four files:
+
+* `simpsons_characters.csv`: List of all the characters with lines on the
+  simpsons.
+* `simpsons_episodes.csv`: List of all "The Simpsons" episodes.
+* `simpsons_loactions.csv`: List of all the locations of the series.
+* `simpsons_script_lines.csv`: List of all the episodes lines.
+
+They are structured in a very relational way. We have to store this information
+following our graph-like model. So, the first things we need to ask ourselves
+is: what queries do I want to run against this data?
+
+In my case I decided to do the following:
+
+* Episodes stream url?
+* Episodes per season?
+* Episodes with more than X imbd_rating?
+* Episodes with more than X votes?
+* Episodes released on year?
+* Episodes with more than X viewers?
+
+The `locations` and `characters` tables can be easily map to a GraphModel:
+
+```javascript
+var Character = GraphModel({
+  type: 'character',
+  key: 'name',
+  properties: ['gender']
+});
+
+var Location = GraphModel({
+  type: 'location',
+  key: 'name'
+});
+```
+
+On the other hand, the `episodes` table is a little bit more tricky. We could
+just store each row as a node property, but that would make it a little bit hard
+to query. Instead we will create some other node models, and then set
+connections between them.
+
+```javascript
+var Season = GraphModel({
+  type: 'season',
+  key: 'number',
+  nodeGenerator: ({ number }) => `season#${number}`
+});
+
+var Rating = GraphModel({
+  type: 'rating',
+  key: 'value',
+  nodeGenerator: ({ number }) => `rating#${number}`
+});
+
+var Votes = GraphModel({
+  type: 'votes',
+  key: 'number',
+  nodeGenerator: ({ number }) => `votes#${number}`
+});
+
+var Viewers = GraphModel({
+  type: 'viewers',
+  key: 'number',
+  nodeGenerator: ({ number }) => `viewers#${number}`
+});
+```
+
+## Queries
+
+```javascript
+function log(v) {
+  return console.log.bind(console)(JSON.stringify(v, null, 2));
+}
+
+function destroy() {
+  return dynamo
+    .deleteTable({
+      TableName: 'GraphTable'
+    })
+    .promise()
+    .then(log)
+    .catch(log);
+}
+
+function scan() {
+  return db
+    .scan({
+      TableName: 'GraphTable',
+      Limit: 100
+    })
+    .promise()
+    .then(log)
+    .catch(log);
+}
+
+function query(options) {
+  var { exp, value, index, gsi = 1 } = options;
+  var expression = '#GSIK = :GSIK';
+  if (exp) expression += ` AND ${exp}`;
+  var params = {
+    TableName: 'GraphTable',
+    IndexName: `By${index}`,
+    KeyConditionExpression: expression,
+    ExpressionAttributeNames: Object.assign(
+      { '#GSIK': `GSIK` },
+      exp ? { '#Sort': index } : {}
+    ),
+    ExpressionAttributeValues: Object.assign(
+      { ':GSIK': `simpsons#${gsi}` },
+      value ? { ':Value': value } : {}
+    ),
+    ReturnConsumedCapacity: 'INDEXES'
+  };
+  //console.log(JSON.stringify(params, null, 2));
+  return db
+    .query(params)
+    .promise()
+    .then(log)
+    .catch(log);
+}
+
+function get(node, type) {
+  return db.get({
+    TableName: 'GraphTable',
+    Key: {
+      Node: node,
+      Type: type
+    }
+  });
+}
+```
+
 ## Test
 
 I am using `jest` to test the library. So, just clone the repo, install the

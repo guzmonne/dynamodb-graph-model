@@ -1,0 +1,156 @@
+digraph Something {
+  graph [fontname = "Roboto"];
+  node [fontname = "Roboto"];
+  edge [fontname = "Roboto"];
+  "show#simpsons" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>show#simpsons</B></TD></TR>
+      <TR><TD COLSPAN="2">The Simpons</TD></TR>
+    </TABLE>>];
+  "simpsons#episode#2" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>simpsons#episode#2</B></TD></TR>
+      <TR><TD COLSPAN="2">Bart the Genius</TD></TR>
+      <TR>
+        <TD>image_url</TD>
+        <TD>http://...</TD>
+      </TR>
+      <TR>
+        <TD>video_url</TD>
+        <TD>http://...</TD>
+      </TR>
+    </TABLE>>];
+  "simpsons#episode#23" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>simpsons#episode#23</B></TD></TR>
+      <TR><TD COLSPAN="2">Bart Gets Hit by a Car</TD></TR>
+      <TR>
+        <TD>image_url</TD>
+        <TD>http://...</TD>
+      </TR>
+      <TR>
+        <TD>video_url</TD>
+        <TD>http://...</TD>
+      </TR>
+    </TABLE>>];
+  "simpsons#line#5" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>simpsons#line#5</B></TD></TR>
+      <TR><TD COLSPAN="2">We're late</TD></TR>
+      <TR>
+        <TD>speaking_line</TD>
+        <TD>true</TD>
+      </TR>
+    </TABLE>>];
+  "simpsons#line#6843" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>simpsons#line#6843</B></TD></TR>
+      <TR><TD COLSPAN="2">Oh, Marge...</TD></TR>
+      <TR>
+        <TD>speaking_line</TD>
+        <TD>true</TD>
+      </TR>
+    </TABLE>>];
+  "simpsons#character#2" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>simpsons#character#2</B></TD></TR>
+      <TR><TD COLSPAN="2">Homer Simpson</TD></TR>
+      <TR>
+        <TD>gender</TD>
+        <TD>m</TD>
+      </TR>
+    </TABLE>>];
+  "simpsons#location#2" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>simpsons#location#2</B></TD></TR>
+      <TR><TD COLSPAN="2">Car</TD></TR>
+    </TABLE>>];
+  "simpsons#location#15" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>simpsons#location#15</B></TD></TR>
+      <TR><TD COLSPAN="2">Moe's Tavern</TD></TR>
+    </TABLE>>];
+  "simpsons#season#1" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>simpsons#season#1</B></TD></TR>
+      <TR><TD COLSPAN="2">1</TD></TR>
+    </TABLE>>];
+  "simpsons#season#2" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>simpsons#season#2</B></TD></TR>
+      <TR><TD COLSPAN="2">2</TD></TR>
+    </TABLE>>];
+  "float#24.5" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>float#24.5</B></TD></TR>
+      <TR><TD COLSPAN="2">24.5</TD></TR>
+    </TABLE>>];
+  "float#24.8" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>float#24.8</B></TD></TR>
+      <TR><TD COLSPAN="2">24.8</TD></TR>
+    </TABLE>>];
+  "int#91423" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>int#91423</B></TD></TR>
+      <TR><TD COLSPAN="2">91423</TD></TR>
+    </TABLE>>];
+  "int#56486" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>int#56486</B></TD></TR>
+      <TR><TD COLSPAN="2">56486</TD></TR>
+    </TABLE>>];
+  "float#7.8" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>float#7.8</B></TD></TR>
+      <TR><TD COLSPAN="2">7.8</TD></TR>
+    </TABLE>>];
+  "int#1973" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>int#1973</B></TD></TR>
+      <TR><TD COLSPAN="2">1973</TD></TR>
+    </TABLE>>];
+  "int#1340" [shape=none, margin=0, label=<
+    <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+      <TR><TD COLSPAN="2"><B>int#1340</B></TD></TR>
+      <TR><TD COLSPAN="2">1340</TD></TR>
+    </TABLE>>];
+
+
+  "show#simpsons" -> "simpsons#episode#2" [label="episode#2"];
+  "show#simpsons" -> "simpsons#episode#23" [label="episode#23"];
+  "show#simpsons" -> "simpsons#season#1" [label="season#1"];
+  "show#simpsons" -> "simpsons#season#2" [label="season#2"];
+  "show#simpsons" -> "simpsons#line#5" [label="line#5"];  
+  "show#simpsons" -> "simpsons#line#6843" [label="line#6843"];  
+  
+  "simpsons#season#1" -> "simpsons#episode#2" [label="episode#2"];
+  
+  "simpsons#season#2" -> "simpsons#episode#23" [label="episode#10"];
+  
+  "simpsons#episode#2" -> "int#1973" [label="imdb_votes"];
+  "simpsons#episode#2" -> "float#24.5" [label="us_viewers_in_millions"];
+  "simpsons#episode#2" -> "float#7.8" [label="imdb_rating"];
+  "simpsons#episode#2" -> "simpsons#line#5" [label="line#4"]
+  "simpsons#episode#2" -> "int#91423" [label="season"];
+  
+  "simpsons#episode#23" -> "int#1340" [label="imdb_votes"];
+  "simpsons#episode#23" -> "float#24.8" [label="us_viewers_in_millions"];
+  "simpsons#episode#23" -> "int#56486" [label="imdb_votes"];
+  "simpsons#episode#23" -> "float#7.8" [label="imdb_rating"];
+  "simpsons#episode#23" -> "simpsons#line#6843" [label="line#264"]
+
+  "simpsons#line#5" -> "simpsons#character#2" [label="spoken_by"]
+  "simpsons#line#5" -> "simpsons#location#2" [label="spoken_at"]
+  "simpsons#line#5" -> "simpsons#episode#2" [label="episode"]
+
+  "simpsons#line#6843" -> "simpsons#character#2" [label="spoken_by"]
+  "simpsons#line#6843" -> "simpsons#location#15" [label="spoken_at"]
+  "simpsons#line#6843" -> "simpsons#episode#23" [label="episode"]
+
+
+  "simpsons#character#2" -> "simpsons#line#5" [label="spoke_line#5"]
+  "simpsons#character#2" -> "simpsons#line#6843" [label="spoke_line#6843"]
+  "simpsons#character#2" -> "simpsons#episode#2" [label="was_in#2"]
+  "simpsons#character#2" -> "simpsons#episode#23" [label="was_in#23"]
+}
